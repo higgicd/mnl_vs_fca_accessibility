@@ -1,0 +1,181 @@
+OBJECTID_1,OBJECTID,ADDRESS,Longitude,ID,Latitude,HAM_CMA,Sum_count
+1,4,"1 Young St, Hamilton, ON L8N 1T8, Canada",-79.87094,4,43.2514312,1,6
+2,7,"10 George St, Hamilton, ON L8P 1C8, Canada",-79.8747461,7,43.2574938,1,1
+3,14,"100 Main St E, Hamilton, ON L8N 3W4, Canada",-79.8652871,14,43.2541433,1,1
+4,15,"100 Main St W, Hamilton, ON L8P 1H6, Canada",-79.8735212,15,43.2569357,1,27
+5,18,"100 West 5th Street, Hamilton, ON L8P 3R2, Canada",-79.8841077,18,43.240445,1,3
+6,20,"1000 Upper Gage Ave, Hamilton, ON L8V 5B7, Canada",-79.8462179,20,43.2136357,1,1
+7,27,"102 North Dr, Dundas, ON L9H 6P7, Canada",-79.9135214,27,43.303838,1,1
+8,31,"105 Wilson St E, Ancaster, ON L9G 2B7, Canada",-79.9828333,31,43.2210289,1,1
+9,32,"1051 Garner Rd W, Ancaster, ON L9G 3K9, Canada",-80.0136667,32,43.1978431,1,2
+10,33,"1051 Upper James St, Hamilton, ON L9C 3A6, Canada",-79.8843701,33,43.2207825,1,1
+11,34,"1057 Main St W, Hamilton, ON L8S 1B7, Canada",-79.9086442,34,43.2580036,1,1
+12,38,"1063 King St W, Hamilton, ON L8S 4S3, Canada",-79.9073279,38,43.2610561,1,1
+13,39,"107 King St W #204, Dundas, ON L9H 1V1, Canada",-79.9582205,39,43.2667395,1,1
+14,40,"107 King St W, Dundas, ON L9H 1V1, Canada",-79.9582205,40,43.2667395,1,5
+15,43,"109 King St W, Dundas, ON L9H 1V1, Canada",-79.9582707,43,43.2668612,1,3
+16,45,"11 A - 969 Upper Ottawa St, Hamilton, ON L8T 4V9, Canada",-79.8347952,45,43.2107107,1,1
+17,47,"110 King St W, Hamilton, ON L8P 4V3, Canada",-79.8711186,47,43.2578582,1,3
+18,52,"1144 Wilson St W, Ancaster, ON L9G 3K9, Canada",-80.0186023,52,43.1969655,1,2
+19,57,"115 Hamilton St N, Waterdown, ON L0R 2H5, Canada",-79.90245,57,43.3355,1,3
+20,64,"1200 Main St W, Hamilton, ON L8P 1H1, Canada",-79.9174697,64,43.259495,1,10
+21,74,"1275 Rymal Rd E, Hamilton, ON L8W 3N1, Canada",-79.8365897,74,43.1894097,1,1
+22,75,"128 Emerald St S, Hamilton, ON L8N 2V5, Canada",-79.8560544,75,43.2493435,1,5
+23,76,"1280 Main St W, Hamilton, ON L8S 4L8, Canada",-79.9202861,76,43.2622445,1,39
+24,78,"129 Central Dr, Ancaster, ON L9G 2A3, Canada",-79.998734,78,43.2135108,1,1
+25,80,"130 Wilson St, Hamilton, ON L8R 1E2, Canada",-79.8620242,80,43.2571474,1,9
+26,82,"132 Parkdale Ave S #207, Hamilton, ON L8K 3P3, Canada",-79.7937837,82,43.233124,1,1
+27,83,"132 Parkdale Ave S, Hamilton, ON L8K 3P3, Canada",-79.7937837,83,43.233124,1,5
+28,84,"1320 Barton St E, Hamilton, ON L8H 2W1, Canada",-79.8066425,84,43.2491067,1,2
+29,85,"133 King St W, Dundas, ON L9H 1V3, Canada",-79.959576,85,43.2671167,1,4
+30,88,"1390 Main St E, Hamilton, ON L8K 1C1, Canada",-79.8103914,88,43.2402737,1,1
+31,89,"14 John St N, Hamilton, ON L8R 1G9, Canada",-79.8660617,89,43.2563267,1,2
+32,90,"140 Centennial Pkwy N, Hamilton, ON L8E, Canada",-79.7609284,90,43.233076,1,3
+33,94,"1436 Brock Rd, Dundas, ON L9H 5E4, Canada",-80.0297027,94,43.369438,1,1
+34,96,"1447 Upper Ottawa St, Hamilton, ON L8W 3J6, Canada",-79.8410579,96,43.1959785,1,4
+35,98,"1475 Upper Ottawa St, Hamilton, ON L8W 3J6, Canada",-79.8413134,98,43.1952188,1,31
+36,99,"1483 Main St W, Hamilton, ON L8S 1E1, Canada",-79.9251675,99,43.2574135,1,1
+37,101,"1493 Centre Rd, Carlisle, ON L0R 1H2, Canada",-79.9825311,101,43.3950612,1,11
+38,103,"15 Lockport Way, Stoney Creek, ON L8E, Canada",-79.6338938,103,43.2181847,1,1
+39,104,"15 Mountain Ave S, Stoney Creek, ON L8G 2V6, Canada",-79.7563288,104,43.2157096,1,8
+40,108,"155 James St S, Hamilton, ON L8P 3A4, Canada",-79.8708022,108,43.2519693,1,5
+41,109,"1568 Main St W, Hamilton, ON L8S 1E2, Canada",-79.9268158,109,43.2576615,1,1
+42,111,"16 Cross St, Dundas, ON L9H 2R4, Canada",-79.9536407,111,43.2667539,1,1
+43,113,"160 Dundurn St S, Hamilton, ON L8P 4K3, Canada",-79.8901583,113,43.2579465,1,5
+44,115,"1605 Main St W, Hamilton, ON L8S 1E6, Canada",-79.9295465,115,43.2568718,1,1
+45,117,"165 Barton St E, Hamilton, ON L8L 2W6, Canada",-79.8587185,117,43.2632033,1,1
+46,120,"1685 Main St W, Hamilton, ON L8S 1G5, Canada",-79.9342231,120,43.256644,1,7
+47,122,"17 King St W, Stoney Creek, ON L8G 1H1, Canada",-79.7603589,122,43.2172706,1,1
+48,127,"175 Longwood Rd S, Hamilton, ON L8P 0A1, Canada",-79.900641,127,43.2568062,1,1
+49,131,"179 James St S, Hamilton, ON L8P 4V1, Canada",-79.87094,131,43.2514312,1,3
+50,134,"180 James St S, Hamilton, ON L8P 4V1, Canada",-79.8717143,134,43.2512422,1,1
+51,142,"198 Barton St, Stoney Creek, ON L8E 2K2, Canada",-79.7367243,142,43.2315007,1,3
+52,144,"2 King St W, Stoney Creek, ON L8G 1G8, Canada",-79.7581411,144,43.2171739,1,1
+53,147,"20 Railway St, Hamilton, ON L8R 2R3, Canada",-79.8726651,147,43.2627333,1,1
+54,150,"200 James St S, Hamilton, ON L8P 3A9, Canada",-79.8721947,150,43.2505958,1,9
+55,152,"200 Main St E, Hamilton, ON L8N 1H3, Canada",-79.8618395,152,43.2530136,1,3
+56,160,"204 King St W, Dundas, ON L9H 1V4, Canada",-79.9626958,160,43.2673792,1,1
+57,161,"204 Queenston Rd, Hamilton, ON L8K, Canada",-79.7956871,161,43.2351217,1,1
+58,166,"206 Locke St S, Hamilton, ON L8P 4B4, Canada",-79.8861059,166,43.2546542,1,2
+59,178,"215 Main St W, Hamilton, ON L8P 1J4, Canada",-79.8787161,178,43.2574584,1,1
+60,179,"217 Governors Rd, Dundas, ON L9H 3J7, Canada",-79.9655461,179,43.2610089,1,1
+61,182,"220 Main St W, Hamilton, ON L8P 1J3, Canada",-79.8787489,182,43.2578318,1,2
+62,188,"223 Briar Hill Crescent, Ancaster, ON L9G 3M9, Canada",-79.965629,188,43.2309634,1,1
+63,189,"225 John St S, Hamilton, ON L8N 2C7, Canada",-79.868472,189,43.249929,1,2
+64,194,"232 Stonehenge Dr, Ancaster, ON L9K 1R5, Canada",-79.9488517,194,43.2172269,1,1
+65,197,"237 Barton St E, Hamilton, ON L8L 2X2, Canada",-79.8543243,197,43.2617528,1,38
+66,198,"237 Barton St, Stoney Creek, ON L8E 2K4, Canada",-79.7328893,198,43.2314428,1,2
+67,207,"25 Charlton Ave E, Hamilton, ON L8N 1Y2, Canada",-79.8711283,207,43.2498154,1,2
+68,209,"250 Dundas St E, Waterdown, ON L0R 2H4, Canada",-79.8972515,209,43.3290787,1,2
+69,212,"252 Dundas St E, Waterdown, ON L0R 2H6, Canada",-79.8970328,212,43.3292834,1,1
+70,215,"2537 Hamilton Regional Rd 56, Binbrook, ON L0R 1C0, Canada",-79.8017076,215,43.1248464,1,1
+71,217,"255 Dundas St E, Waterdown, ON L0R 2H6, Canada",-79.8976856,217,43.3309438,1,2
+72,218,"255 Main St W, Hamilton, ON L8P 1J5, Canada",-79.88028,218,43.2576689,1,1
+73,220,"26 Legend Ct, Ancaster, ON L9K 1J3, Canada",-79.9475124,220,43.2274344,1,1
+74,221,"260 Nebo Rd, Hamilton, ON L8W 3K5, Canada",-79.8390406,221,43.1915765,1,7
+75,222,"264 Concession St, Hamilton, ON L9A 1B2, Canada",-79.8647054,222,43.2438605,1,1
+76,226,"269 King St W, Dundas, ON L9H 1W2, Canada",-79.9661535,226,43.2691752,1,1
+77,229,"2732 Barton St E, Hamilton, ON L8E 4M6, Canada",-79.7460852,229,43.233364,1,2
+78,230,"2757 King St E, Hamilton, ON L8G 5E4, Canada",-79.7743945,230,43.2216826,1,5
+79,231,"277 Wilson St E, Ancaster, ON L9G 2B8, Canada",-79.9778103,231,43.2248978,1,2
+80,234,"280 Queenston Rd, Hamilton, ON L8K 1H1, Canada",-79.7924618,234,43.2338188,1,12
+81,237,"288 Dundas St E, Waterdown, ON L0R 2H4, Canada",-79.8944086,237,43.3316646,1,2
+82,238,"289 Charlton Ave W, Hamilton, ON L8P 2E4, Canada",-79.8856605,238,43.2528362,1,1
+83,245,"3 Wilson St E, Ancaster, ON L9G 2B3, Canada",-79.987046,245,43.2182741,1,1
+84,248,"30 Regent Ave, Hamilton, ON L9B 1R6, Canada",-79.9102404,248,43.2135551,1,1
+85,254,"304 Victoria Ave N, Hamilton, ON L8L 5G4, Canada",-79.85235,254,43.262161,1,1
+86,258,"3055 Homestead Dr, Mount Hope, ON L0R 1W0, Canada",-79.9125799,258,43.1598014,1,1
+87,263,"311 Fruitland Rd, Stoney Creek, ON L8E 5M8, Canada",-79.7004581,263,43.2228193,1,3
+88,264,"311 Wilson St E, Ancaster, ON L9G 2B8, Canada",-79.9770973,264,43.2259477,1,1
+89,265,"3137 Hwy 56, Hamilton, ON L8J, Canada",-79.7766787,265,43.1732386,1,2
+90,269,"32 Princess St, Dundas, ON L9H 2X7, Canada",-79.9601442,269,43.2698973,1,1
+91,271,"323 Wilson St E, Ancaster, ON L9G 4A8, Canada",-79.976931,271,43.2263173,1,4
+92,272,"325 Dundurn St S, Hamilton, ON L8P 2M6, Canada",-79.8923139,272,43.2516024,1,1
+93,273,"325 Winterberry Dr, Stoney Creek, ON L8J 2N5, Canada",-79.8070422,273,43.1939156,1,5
+94,274,"326 Wilson St E, Ancaster, ON L9G 2C2, Canada",-79.9764229,274,43.2261887,1,3
+95,275,"33 Dundas St, Dundas, ON L9H 1A1, Canada",-79.9498073,275,43.2640275,1,4
+96,283,"337 Queenston Rd, Hamilton, ON L8K 1H7, Canada",-79.7894622,283,43.2337924,1,7
+97,284,"34 King St E, Stoney Creek, ON L8G 1J8, Canada",-79.756745,284,43.2164769,1,1
+98,287,"35 Hatt St, Dundas, ON L9H 2G2, Canada",-79.9561888,287,43.2653399,1,1
+99,290,"35 Stone Church Rd, Ancaster, ON L9K 1S4, Canada",-79.935958,290,43.2278555,1,1
+100,291,"35 Upper Centennial Pkwy, Stoney Creek, ON L8J 3W2, Canada",-79.7766964,291,43.1768445,1,14
+101,296,"353 Isaac Brock Drive Stoney Creek, 353 Isaac Brock Dr, Stoney Creek, ON L8J 2J3, Canada",-79.7895939,296,43.1935133,1,1
+102,303,"360 Hamilton Regional Rd 8, Hamilton, ON L8K 1H8, Canada",-79.7268806,303,43.2187153,1,1
+103,304,"360 Queenston Rd, Hamilton, ON L8K 1H9, Canada",-79.7884218,304,43.2330482,1,2
+104,310,"38 King St W, Dundas, ON L9H 1T7, Canada",-79.955604,310,43.2660994,1,3
+105,314,"393 Rymal Rd W, Hamilton, ON L9B 1V2, Canada",-79.9103112,314,43.2051155,1,2
+106,319,"40 James St S, Hamilton, ON L8P 4W6, Canada",-79.8697072,319,43.2556281,1,2
+107,333,"414 Victoria Ave N, Hamilton, ON L8L 5G8, Canada",-79.850594,333,43.2655116,1,10
+108,343,"432 Main St E, Hamilton, ON L8N 1J9, Canada",-79.8530025,343,43.2509403,1,1
+109,344,"438 Hughson St N, Hamilton, ON L8L 4N5, Canada",-79.8609455,344,43.2703065,1,3
+110,348,"444 Concession St, Hamilton, ON L9A 1C2, Canada",-79.8568489,348,43.2420421,1,1
+111,351,"45 Kenilworth Ave N, Hamilton, ON L8H 4R4, Canada",-79.8097792,351,43.2419663,1,1
+112,360,"460 Main St E, Hamilton, ON L8N 1K4, Canada",-79.851911,360,43.2505732,1,5
+113,376,"50 Charlton Ave E, Hamilton, ON L8N 4A6, Canada",-79.8712441,376,43.2483458,1,19
+114,378,"50 Dundurn St S, Hamilton, ON L8P 4W3, Canada",-79.8893413,378,43.2612203,1,3
+115,383,"500 Centennial Pkwy N, Hamilton, ON L8E 0G2, Canada",-79.7536566,383,43.2414738,1,2
+116,387,"503 Concession St, Hamilton, ON L9A 1C1, Canada",-79.8538759,387,43.2416778,1,5
+117,388,"505 King St W, Hamilton, ON L8P 1B9, Canada",-79.8840971,388,43.2606949,1,8
+118,389,"505 Rymal Rd E, Hamilton, ON L8W 1B3, Canada",-79.870736,389,43.197387,1,2
+119,394,"510 Centennial Pkwy N, Hamilton, ON L8E 0G2, Canada",-79.7564199,394,43.2421355,1,1
+120,396,"52 King St E, Dundas, ON L9H 5N5, Canada",-79.9513544,396,43.2656384,1,1
+121,398,"521 Hamilton Regional Rd 8, Stoney Creek, ON L8G 1G4, Canada",-79.71344,398,43.2162882,1,1
+122,406,"531 Queenston Rd, Hamilton, ON L8K 1J7, Canada",-79.7789039,406,43.231559,1,1
+123,416,"547 Upper James St Unit B, Hamilton, ON L9C 2Y5, Canada",-79.8761023,416,43.2408918,1,1
+124,423,"555 Concession St, Hamilton, ON L8V 1A8, Canada",-79.8517755,423,43.2411909,1,1
+125,425,"56 Governors Rd, Dundas, ON L9H 5G7, Canada",-79.9576976,425,43.2617504,1,1
+126,428,"565 Sanatorium Rd, Hamilton, ON L9C 5K8, Canada",-79.9153819,428,43.2399407,1,1
+127,429,"567 Scenic Dr, Hamilton, ON L9C 1G9, Canada",-79.9066544,429,43.2435166,1,1
+128,432,"574 Upper James St, Hamilton, ON L9C 2Y6, Canada",-79.8773004,432,43.240174,1,3
+129,433,"576 Main St E, Hamilton, ON L8M 1J2, Canada",-79.847616,433,43.2495932,1,4
+130,444,"60 Centennial Pkwy S, Stoney Creek, ON L8G 2C5, Canada",-79.7651773,444,43.2247405,1,4
+131,445,"60 Hatt St, Dundas, ON L9H 7T6, Canada",-79.9574344,445,43.2652442,1,1
+132,447,"605 James St N, Hamilton, ON L8L 1J9, Canada",-79.8622571,447,43.2732517,1,5
+133,448,"609 Upper James St, Hamilton, ON L9C 2Y9, Canada",-79.8767574,448,43.2393309,1,1
+134,450,"61 Wilson St W, Ancaster, ON L9G, Canada",-79.9902414,450,43.2170764,1,1
+135,454,"62 King St W, Dundas, ON L9H 1T8, Canada",-79.9564073,454,43.2662569,1,3
+136,455,"62 Norma Crescent, Ancaster, ON L9G 4P2, Canada",-80.0022659,455,43.2124589,1,1
+137,456,"625 Greenhill Ave, Hamilton, ON L8K 5N8, Canada",-79.7867409,456,43.2102722,1,1
+138,457,"631 Queenston Rd, Hamilton, ON L8K 6R5, Canada",-79.7751636,457,43.2308038,1,7
+139,458,"632 Queenston Rd, Hamilton, ON L8K 1K2, Canada",-79.7744111,458,43.2301283,1,1
+140,465,"67 Caroline St S, Hamilton, ON L8P 3K6, Canada",-79.8761898,465,43.2563132,1,1
+141,466,"67 Kenilworth Ave N, Hamilton, ON L8H 4R6, Canada",-79.8094063,466,43.2425611,1,12
+142,468,"672 Upper James St, Hamilton, ON L9C 2Z3, Canada",-79.8793614,468,43.2349518,1,1
+143,470,"675 Upper James St, Hamilton, ON L9C 2Z5, Canada",-79.8778084,470,43.234196,1,1
+144,472,"678 Main St E, Hamilton, ON L8M 1K2, Canada",-79.8431107,472,43.248348,1,2
+145,473,"68 Centennial Pkwy N, Hamilton, ON L8E 1H6, Canada",-79.7628742,473,43.230163,1,1
+146,477,"690 Main St W, Hamilton, ON L8S 1A4, Canada",-79.8981919,477,43.260329,1,1
+147,480,"699 Concession St, Hamilton, ON L8V 4X2, Canada",-79.8461713,480,43.239889,1,9
+148,482,"70 King St E, Stoney Creek, ON L8G 1K2, Canada",-79.7539533,482,43.2163723,1,2
+149,485,"700 Main St E, Hamilton, ON L8M 1K7, Canada",-79.8418853,485,43.2480139,1,7
+150,487,"701 Main St W, Hamilton, ON L8S 1A2, Canada",-79.8978857,487,43.2598155,1,1
+151,488,"701 Upper Sherman Ave, Hamilton, ON L8V 3M7, Canada",-79.8486697,488,43.2256679,1,1
+152,492,"71 Rebecca St, Hamilton, ON L8R 1B6, Canada",-79.8649448,492,43.2575883,1,3
+153,493,"711 Concession St, Hamilton, ON L8V 5C2, Canada",-79.8449394,493,43.2399717,1,10
+154,497,"72 King St W, Stoney Creek, ON L8G 1H8, Canada",-79.7648049,497,43.2186631,1,2
+155,499,"723 Rymal Rd W, Hamilton, ON L9B 2W1, Canada",-79.9264942,499,43.2098724,1,6
+156,507,"755 Concession St, Hamilton, ON L8V 1C4, Canada",-79.8434389,507,43.238968,1,1
+157,511,"770 Mohawk Rd W, Hamilton, ON L9C 6P6, Canada",-79.920786,511,43.2341151,1,2
+158,515,"78 Barton St W, Hamilton, ON L8L 1A6, Canada",-79.8690744,515,43.2650528,1,1
+159,518,"79 Lynden Rd, Hamilton, ON L0R, Canada",-80.1464564,518,43.2340185,1,2
+160,519,"79 South St W, Dundas, ON L9H 4C7, Canada",-79.9524926,519,43.2593843,1,1
+161,523,"800 Queenston Rd, Stoney Creek, ON L8G 2N4, Canada",-79.7663599,523,43.2280278,1,1
+162,524,"801 Mohawk Rd W, Hamilton, ON L9C 5V8, Canada",-79.9230305,524,43.2330512,1,9
+163,528,"81 Wilson St W, Ancaster, ON L9G 1N1, Canada",-79.9905578,528,43.2159967,1,1
+164,530,"82 Stinson St, Hamilton, ON L8N 1S2, Canada",-79.8577075,530,43.2486817,1,1
+165,535,"836 Upper James St, Hamilton, ON L9C 3A4, Canada",-79.8827516,535,43.228087,1,4
+166,536,"848 Main St E, Hamilton, ON L8M 1L9, Canada",-79.8357581,536,43.2463436,1,1
+167,537,"849 Upper Wentworth St, Hamilton, ON L9A 5H4, Canada",-79.8609499,537,43.2218017,1,11
+168,541,"867 Upper Paradise Rd, Hamilton, ON L9C 5R3, Canada",-79.9176276,541,43.2193222,1,1
+169,546,"88 Maplewood Ave, Hamilton, ON L8M 1W9, Canada",-79.8371314,546,43.2448007,1,5
+170,547,"880 Upper Wentworth St, Hamilton, ON L9A 5H2, Canada",-79.8635459,547,43.2213221,1,2
+171,548,"884 Concession St, Hamilton, ON L8V 1E6, Canada",-79.838841,548,43.237491,1,1
+172,553,"90 Chedmac Dr, Hamilton, ON L9C 7W1, Canada",-79.9213626,553,43.2372918,1,2
+173,554,"90 Dundas St E, Waterdown, ON L0R 2H2, Canada",-79.9086005,554,43.3156109,1,3
+174,557,"908 Garth St, Hamilton, ON L9C 4L2, Canada",-79.9010108,557,43.2333683,1,1
+175,561,"928 Barton St E, Hamilton, ON L8L 3C3, Canada",-79.824357,561,43.253203,1,1
+176,565,"95 Hamilton St N, Waterdown, ON L0R 2H6, Canada",-79.901365,565,43.3342308,1,4
+177,567,"969 Upper Ottawa St, Hamilton, ON L8T 4V9, Canada",-79.8348556,567,43.2103228,1,5
+178,568,"980 Queenston Rd, Stoney Creek, ON L8G 1B9, Canada",-79.7494947,568,43.2242993,1,2
+179,569,"987 King St E, Hamilton, ON L8M 1C6, Canada",-79.8346202,569,43.2511797,1,1
+180,576,"Lockport Way, Hamilton, ON L8E, Canada",-79.6328871,576,43.2191119,1,1
