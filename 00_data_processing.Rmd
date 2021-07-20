@@ -1,0 +1,434 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r, include = FALSE}
+library(cancensus)
+library(magrittr)
+library(osmextract)
+library(r5r)
+library(sf)
+library(smoothr)
+library(tidyverse)
+library(tidytransit)
+library(tmap)
+
+# options
+tmap_mode("plot")
+options(cancensus.api_key = "CensusMapper_8a670a7173437cf3e6db57b780ae14bf")
+options(java.parameters = "-Xmx8G")
+
+dir.create("./r5_graph") # for the r5 network graph
+r5_path <- file.path("./r5_graph")
+```
+
+# Retreive Census Data
+
+```{r get harbour data, eval = FALSE}
+# download hamilton harbour water file
+download.file(url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/2016/lhy_000c16a_e.zip", 
+              destfile = "./data/lhy_000c16a_e.zip")
+
+unzip(zipfile = "./data/lhy_000c16a_e.zip", exdir = "./data")
+
+hamilton_harbour <- st_read("./data/lhy_000c16a_e.shp") %>%
+  filter(NAME == "Hamilton Harbour" | NAME == "Desjardins Canal") %>%
+  # project to NAD 1983 Zone 17N
+  st_transform(crs = 26917)
+
+# save for future use
+save(hamilton_harbour, file = "./data/hamilton_harbour.RData", compress = "xz")
+```
+
+```{r get census 2016 data, include = FALSE}
+data_da_2016_poly <- get_census(dataset='CA16', regions=list(CSD="3525005"), #35537
+                          level='DA', use_cache = FALSE, geo_format = 'sf') %>%
+  # project to NAD 1983 Zone 17N
+  st_transform(crs = 26917)
+
+load("./data/hamilton_harbour.RData")
+
+data_da_2016_poly <- st_difference(data_da_2016_poly, st_union(st_combine(hamilton_harbour %>% filter(NAME == "Hamilton Harbour")))) %>% 
+  drop_crumbs(threshold = 1) %>%
+  mutate(popdens = Population / (st_area(.)/10000)) # population density in people/ha
+
+data_da_2016_point <- data_da_2016_poly %>% st_centroid()
+
+# get province for background
+ontario_poly <- get_census(dataset='CA16', regions=list(PR=c("35")),
+                          level='Regions', use_cache = FALSE, geo_format = 'sf') %>%
+  # project to NAD 1983 Zone 17N
+  st_transform(crs = 26917) %>%
+  st_difference(., st_union(st_combine(hamilton_harbour %>% filter(NAME == "Hamilton Harbour")))) %>% 
+  drop_crumbs(threshold = 1)
+```
+
+# Load Physician Data
+
+```{r}
+doctors <- read.csv("./data/HamiltonDoctors.csv") %>% 
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326) %>%
+  rename(doctor_id = ID, doctor_count = Sum_count)
+```
+
+# Maps of Input Data
+
+```{r}
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "popdens", palette = "viridis", style = "jenks", title = "Population per HA")  +
+  tm_layout(legend.position = c("left","bottom"))
+
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill("grey75") +
+  tm_shape(doctors) + 
+  tm_bubbles(size = "doctor_count", 
+             col = "doctor_count", 
+             palette = "viridis", 
+             style = "jenks", 
+             title.size = "Family Physicians", 
+             title.col = "") +
+  tm_layout(legend.position = c("left","bottom"))
+```
+
+# Get Travel Time Matrix
+## Download Travel Network Data
+
+First, get data from OpenStreetMap for the Greater Golden Horseshoe region:
+
+```{r osm extract, include - FALSE}
+# get url
+#oe_match("Golden Horseshoe")
+
+# download osm
+oe_download(file_url = "http://download.openstreetmap.fr/extracts/north-america/canada/ontario/golden_horseshoe-latest.osm.pbf", 
+            provider = "openstreetmap_fr",
+            download_directory = "./r5_graph")
+
+# read in as sf if you want
+#osm <- oe_read(file_path = "./data/openstreetmap_fr_golden_horseshoe-latest.osm.pbf", layer = "lines")
+```
+
+And General Transit Feed Specification (GTFS) files for the HSR:
+
+```{r download gtfs, include = FALSE, eval = FALSE}
+download.file(url = "https://transitfeeds.com/p/hamilton-street-railway/31/latest/download", 
+              destfile = file.path(r5_path, "hsr.zip"), mode = "wb")
+```
+
+Now build the network:
+
+```{r build graph, include = FALSE}
+r5_network <- setup_r5(data_path = r5_path, verbose = FALSE)
+```
+
+## Set Up Routing
+
+Set up the departure date and time
+
+```{r get calendar range of GTFS}
+# query the gtfs file using tidytransit
+hsr_gtfs <- read_gtfs(path = file.path(r5_path, "hsr.zip"))
+summary(hsr_gtfs)
+
+# set departure datetime within the calendar range of the GTFS (to use transit)
+departure_datetime <- as.POSIXct("2021-06-29 08:00:00", 
+                                 format = "%Y-%m-%d %H:%M:%S",
+                                 tz = "America/New_York")
+```
+
+Prepare origins and destinations:
+
+```{r}
+# origins
+origins_i <-  data_da_2016_point %>% transmute(id = GeoUID, geometry) %>% st_transform(nyc_cb_point, crs = 4326)
+
+# destinations
+destinations_j <-  doctors %>% transmute(id = doctor_id, geometry) %>%st_transform(nyc_cb_point, crs = 4326)
+```
+
+```{r}
+ttm <- travel_time_matrix(r5r_core = r5_network,
+                          origins = origins_i,
+                          destinations = destinations_j,
+                          mode = c("CAR"),
+                          departure_datetime = departure_datetime,
+                          max_walk_dist = 4000,
+                          max_trip_duration = 120, verbose = FALSE)
+```
+
+
+
+
+
+
+
+
+
+```{r load data}
+traveltimes <- read.csv("./data/Hamilton Travel Times.csv")
+population <- read.csv("./data/DA Populations.csv")
+doctors <- read.csv("./data/HamiltonDoctors.csv")
+Ham_households <- read.csv("./data/Hamilton Households.csv")
+```
+
+```{r prepare data}
+Hamiltontimes <- semi_join(traveltimes, population, by="DAUID") %>% select(-1)
+population <- semi_join(population, Hamiltontimes, by="DAUID")
+doctors <- select(doctors,-1)
+```
+
+
+```{r fca}
+#library(dplyr)
+#traveltimes <- read.csv("OD Matrix.csv")
+#population <- read.csv("DA Populations.csv")
+#Hamiltontimes <- semi_join(traveltimes,population,by="DAUID")
+#population <- semi_join(population,Hamiltontimes,by="DAUID")
+#doctors <- read.csv("HamiltonDoctors.csv")
+#doctors <- select(doctors,-1)
+#Hamiltontimes <- Hamiltontimes[,2]
+
+ID <- doctors$OBJECTID + 1
+ID[181] <- 1 # what does this do? doesnt it change the ordering of the calls to the doctors?
+ID <- sort(ID)
+
+
+beta <- log(0.1, base=exp(1))/-20
+OBJECTID <- doctors$OBJECTID
+DAUID <- population$DAUID
+Rj <- data.frame(OBJECTID)
+Rj$Ratio <- 1
+gaussian <- data.frame(DAUID)
+sum <- 0
+FCAaccess <- data.frame(DAUID)
+FCAaccess$Accessibility <- 0
+
+for(j in 2:length(Hamiltontimes)){
+  numphysicians <- doctors$Sum_count[j-1]
+  for(k in population$DAUID){
+    gaussian[gaussian$DAUID==k,j] <- exp(-beta*Hamiltontimes[Hamiltontimes$DAUID==k,j])
+    sum <- sum + gaussian[gaussian$DAUID==k,j]*population$Data[population$DAUID==k]
+  }
+  Rj$Ratio[Rj$OBJECTID==doctors$OBJECTID[j-1]] <- numphysicians/sum
+}
+
+for(i in population$DAUID){
+  for(j in 2:length(Hamiltontimes)){
+    FCAaccess$Accessibility[FCAaccess$DAUID==i] <- FCAaccess$Accessibility[FCAaccess$DAUID==i] + Rj$Ratio[j-1]*gaussian[gaussian$DAUID==i,j] 
+  }
+}
+```
+
+# Chris' attempt at calculating the FCA numbers
+
+```{r cdh fca}
+beta <- log(0.1, base=exp(1))/-20
+
+travel_times <- Hamiltontimes %>% 
+  # convert to long format
+  pivot_longer(cols = starts_with("X"), values_to = "travel_time", names_to = "doctor_id", names_prefix = "X") %>% 
+  mutate(doctor_id = as.numeric(doctor_id)) %>% 
+  
+  # join doctor info
+  left_join(doctors %>% 
+              transmute(doctor_id = ID, doctor_count = Sum_count), by = "doctor_id") %>%
+  
+  # join population info
+  left_join(population %>% 
+              transmute(DAUID, population = Data), by = "DAUID") %>%
+  
+  # get weighted travel times
+  mutate(travel_time_gaus = exp(-beta*travel_time)) %>%
+  
+  # group by doctor id and calculate weighted populations and provider-to-population ratios (ppr) for each facility
+  group_by(doctor_id) %>%
+  mutate(weighted_pop = sum(travel_time_gaus * population), # for error checking
+         fca_ppr = first(doctor_count) / sum(travel_time_gaus * population)) %>%
+  ungroup() %>%
+  
+  # group by DA and get weighted ppr
+  group_by(DAUID) %>%
+  mutate(fca_access = sum(travel_time_gaus * fca_ppr))
+
+doctors_ppr <- travel_times %>% 
+  group_by(doctor_id) %>% 
+  summarize(fca_ppr = first(fca_ppr)) %>% 
+  left_join(Rj %>% transmute(doctor_id = OBJECTID, Ratio), by = "doctor_id")
+
+da_fca_access <- travel_times %>% 
+  group_by(DAUID) %>% 
+  summarize(fca_access = first(fca_access)) %>% 
+  left_join(FCAaccess, by = "DAUID")
+```
+
+# Maria's New Model
+
+```{r newmodel}
+alpha = 0.065
+omega = 22
+#Ham_households <- read.csv("Hamilton Households.csv")
+#traveltimes <- read.csv("OD Matrix.csv")
+#Hamiltontimes <- semi_join(traveltimes,Ham_households,by="DAUID")
+#Ham_households <- semi_join(Ham_households,Hamiltontimes,by="DAUID")
+H_tot <- sum(Ham_households$Data)
+Zj <- read.csv("./data/HamiltonDoctors.csv")
+Zj <- select(Zj,-1)
+ID <- Zj$OBJECTID + 1
+ID[181] <- 1
+ID <- sort(ID)
+#Hamiltontimes <- Hamiltontimes[,ID] # extra column removed initially
+Z_tot <- sum(Zj$Sum_count)
+R_bar <- (alpha*H_tot)/(omega*Z_tot)
+beta1 <- -0.05
+betak2 <- 1
+betak3 <- -0.5
+DAUID <- Hamiltontimes$DAUID
+OBJECTID <- Zj$OBJECTID
+Rj <- data.frame(OBJECTID)
+Rj$Ratios <- R_bar
+Tij <- Hamiltontimes
+expo <- Hamiltontimes
+constant <- Hamiltontimes
+sums <- data.frame(DAUID)
+
+calexpo <- function(expo,constant){
+  for(j in 2:length(constant)){
+    for(i in constant$DAUID){
+      constant[constant$DAUID==i, j] <- Hamiltontimes[Hamiltontimes$DAUID==i,j]*beta1 + betak2*log10(omega*Zj$Sum_count[j-1])+betak3*Rj$Ratios[j-1]
+      expo[expo$DAUID==i,j] <- exp(constant[constant$DAUID==i,j])
+    }
+  }
+  return(expo)
+}
+expo <- calexpo(expo,constant)
+
+sums$Sum <- apply(expo[,2:181],1,sum)
+
+calTij <- function(expo,sums,Tij){
+  for(i in Tij$DAUID){
+    Tij[Tij$DAUID==i,2:181] <- (alpha*Ham_households$Data[Ham_households$DAUID==i]*expo[expo$DAUID==i,2:181])/sums$Sum[sums$DAUID==i]
+  }
+  return(Tij)
+}
+
+Tij <- calTij(expo,sums,Tij)
+```
+
+# New Model with New Rj
+
+```{r new rj}
+rj <- data.frame(OBJECTID)
+Rj_new <- data.frame(OBJECTID)
+convergence <- data.frame(OBJECTID)
+converged <- data.frame(OBJECTID)
+epsilon <- 0.01
+max_iteration <- 10
+iteration <- 1
+sums <- data.frame(DAUID)
+for(j in 2:length(Tij)){
+  rj$Ratios[j-1] <- sum(Tij[,j])/(omega*Zj$Sum_count[j-1])
+  Rj_new$Ratios[j-1] <- (Rj$Ratios[j-1]+rj$Ratios[j-1])/2
+  convergence$Value[j-1] <- abs(Rj_new$Ratios[j-1]-Rj$Ratios[j-1])/Rj$Ratios[j-1]
+}
+
+converged$Value <- !(convergence$Value > epsilon)
+Rj <- Rj_new
+while(!all(converged$Value)){
+  iteration = iteration + 1
+  if(iteration == max_iteration){
+    break
+  }
+  
+  else{
+    expo <- calexpo(expo,constant)
+    sums$Sum <- apply(expo[,2:181],1,sum)
+    Tij <- calTij(expo,sums,Tij)
+    
+    for(m in 2:length(Tij)){
+      rj$Ratios[m-1] <- sum(Tij[,m])/(omega*Zj$Sum_count[m-1])
+      Rj_new$Ratios[m-1] <- (Rj$Ratios[m-1]+rj$Ratios[m-1])/2
+      convergence$Value[m-1] <- abs(Rj_new$Ratios[m-1]-Rj$Ratios[m-1])/Rj$Ratios[m-1]
+    }
+    
+    converged$Value <- !(convergence$Value > epsilon)
+    Rj <- Rj_new
+  }
+}
+expo <- calexpo(expo,constant)
+sums$Sum <- apply(expo[,2:181],1,sum)
+Tij <- calTij(expo,sums,Tij)
+```
+
+# New Accessibilities
+
+```{r}
+alpha = 0.065
+omega = 22
+#Ham_households <- read.csv("Hamilton Households.csv")
+#traveltimes <- read.csv("OD Matrix.csv")
+#Hamiltontimes <- semi_join(traveltimes,Ham_households,by="DAUID")
+#Ham_households <- semi_join(Ham_households,Hamiltontimes,by="DAUID")
+Zj <- read.csv("./data/HamiltonDoctors.csv")
+Zj <- select(Zj,-1)
+ID <- Zj$OBJECTID + 1
+ID[181] <- 1
+ID <- sort(ID)
+#Hamiltontimes <- Hamiltontimes[,ID]
+beta1 <- -0.05
+betak2 <- 1
+betak3 <- -0.5
+#Rj <- read.csv("Rj Values.csv") # sub-in Rj_new from earlier
+DAUID <- Hamiltontimes$DAUID
+ai <- data.frame(DAUID)
+expo <- Hamiltontimes
+constant <- Hamiltontimes
+sums <- data.frame(DAUID)
+for(j in 2:length(constant))
+{
+  for(i in constant$DAUID)
+  {
+    constant[constant$DAUID==i, j] <- Hamiltontimes[Hamiltontimes$DAUID==i,j]*beta1 + betak2*log10(omega*Zj$Sum_count[j-1])+betak3*Rj_new$Ratios[j-1] # < is it Rj_new here?
+    expo[expo$DAUID==i,j] <- exp(constant[constant$DAUID==i,j])
+  }
+}
+sums$Sum <- apply(expo[,2:181],1,sum)
+for(k in ai$DAUID)
+{
+  ai$Value[ai$DAUID==k] <- log10(sums$Sum[sums$DAUID==k])
+  }
+```
+
+
+# Compare Results
+
+```{r merge}
+da_fca_access <- da_fca_access %>% left_join(ai, by = "DAUID")
+```
+
+
+```{r plot}
+plot(doctors_ppr$fca_ppr, doctors_ppr$Ratio, main = "cdh ppr vs maria ppr")
+plot(da_fca_access$fca_access, da_fca_access$Accessibility, main = "cdh fca vs maria fca")
+plot(da_fca_access$fca_access, da_fca_access$Value, main = "cdh fca vs maria model")
+```
+
+# Map 
+
+```{r maps, warning = FALSE, message = FALSE}
+load("./data/hamilton_da_2016.RData")
+
+hamilton_da_2016 %<>% mutate(DAUID = as.numeric(as.character(DA))) %>% left_join(da_fca_access, by = "DAUID")
+
+
+tm_shape(hamilton_da_2016) + tm_fill(col = "fca_access", style = "jenks", title = "cdh fca access")
+tm_shape(hamilton_da_2016) + tm_fill(col = "Accessibility", style = "jenks", title = "maria fca access")
+tm_shape(hamilton_da_2016) + tm_fill(col = "Value", style = "jenks", title = "maria model")
+```
+
+
+
