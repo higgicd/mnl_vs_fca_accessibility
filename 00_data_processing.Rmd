@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Calculating Transportation Accessibility to Primary Care Physicians in the City of Hamilton"
 output: html_notebook
 ---
 
@@ -18,7 +18,7 @@ library(tmap)
 tmap_mode("plot")
 options(cancensus.api_key = "CensusMapper_8a670a7173437cf3e6db57b780ae14bf")
 options(java.parameters = "-Xmx8G")
-
+dir.create("./results")
 dir.create("./r5_graph") # for the r5 network graph
 r5_path <- file.path("./r5_graph")
 ```
@@ -26,6 +26,7 @@ r5_path <- file.path("./r5_graph")
 # Retreive Census Data
 
 ```{r get harbour data, eval = FALSE}
+# you can just load a pre-prepared file in the next code chunk
 # download hamilton harbour water file
 download.file(url = "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/2016/lhy_000c16a_e.zip", 
               destfile = "./data/lhy_000c16a_e.zip")
@@ -42,12 +43,12 @@ save(hamilton_harbour, file = "./data/hamilton_harbour.RData", compress = "xz")
 ```
 
 ```{r get census 2016 data, include = FALSE}
+load("./data/hamilton_harbour.RData")
+
 data_da_2016_poly <- get_census(dataset='CA16', regions=list(CSD="3525005"), #35537
                           level='DA', use_cache = FALSE, geo_format = 'sf') %>%
   # project to NAD 1983 Zone 17N
   st_transform(crs = 26917)
-
-load("./data/hamilton_harbour.RData")
 
 data_da_2016_poly <- st_difference(data_da_2016_poly, st_union(st_combine(hamilton_harbour %>% filter(NAME == "Hamilton Harbour")))) %>% 
   drop_crumbs(threshold = 1) %>%
@@ -120,6 +121,7 @@ download.file(url = "https://transitfeeds.com/p/hamilton-street-railway/31/lates
               destfile = file.path(r5_path, "hsr.zip"), mode = "wb")
 ```
 
+## Build Network
 Now build the network:
 
 ```{r build graph, include = FALSE}
@@ -127,8 +129,7 @@ r5_network <- setup_r5(data_path = r5_path, verbose = FALSE)
 ```
 
 ## Set Up Routing
-
-Set up the departure date and time
+Set up the departure date and time:
 
 ```{r get calendar range of GTFS}
 # query the gtfs file using tidytransit
@@ -151,6 +152,9 @@ origins_i <-  data_da_2016_point %>% transmute(id = GeoUID, geometry) %>% st_tra
 destinations_j <-  doctors %>% transmute(id = doctor_id, geometry) %>%st_transform(nyc_cb_point, crs = 4326)
 ```
 
+## Calculate Travel Time Matrix
+Now calculate the travel time matrix:
+
 ```{r}
 ttm <- travel_time_matrix(r5r_core = r5_network,
                           origins = origins_i,
@@ -159,20 +163,145 @@ ttm <- travel_time_matrix(r5r_core = r5_network,
                           departure_datetime = departure_datetime,
                           max_walk_dist = 4000,
                           max_trip_duration = 120, verbose = FALSE)
+
+# Save
+save(ttm, file = "./results/ttm.RData", compress = TRUE)
 ```
 
+# Load Results
 
+```{r}
+load("./results/ttm.RData")
+```
 
+# Floating Catchment Accessibility
 
+```{r}
+beta <- log(0.1, base=exp(1))/-20
 
+fca_ttm <- ttm %>%
+  rename(GeoUID = fromId, doctor_id = toId) %>%
+  mutate(doctor_id = as.numeric(doctor_id)) %>% 
+  
+  # join doctor info
+  left_join(doctors %>% 
+              st_drop_geometry() %>%
+              transmute(doctor_id, doctor_count), by = "doctor_id") %>%
+  
+  # join population info
+  left_join(data_da_2016_poly %>% 
+              st_drop_geometry() %>%
+              transmute(GeoUID, Population), by = "GeoUID") %>%
+  
+  # get weighted travel times
+  mutate(travel_time_gaus = exp(-beta*travel_time)) %>%
+  mutate(fca_weighted_pop = Population * travel_time_gaus) %>%
+  
+  # group by doctor id and calculate weighted populations and provider-to-population ratios (ppr) for each facility
+  group_by(doctor_id) %>%
+  mutate(fca_ppr = first(doctor_count) / sum(fca_weighted_pop)) %>%
+  ungroup() %>%
+  
+  mutate(fca_weighted_ppr = fca_ppr * travel_time_gaus)
+```
 
+# Balanced FCA
 
+```{r}
+bfca_ttm <- fca_ttm %>%
+  filter(Population >0) %>%
+  group_by(GeoUID) %>%
+  mutate(bfca_rowsum = sum(Population * travel_time_gaus)) %>% 
+  ungroup() %>%
+  
+  mutate(bfca_weighted_pop = (Population * travel_time_gaus)/bfca_rowsum) %>%
+  
+  # get bfca ppr
+  group_by(doctor_id) %>%
+  mutate(#bfca_ppr_pop = sum(bfca_weighted_pop), #extra
+         bfca_ppr = first(doctor_count) / sum(bfca_weighted_pop),
+         bfca_colsum = sum(bfca_ppr * travel_time_gaus)) %>%
+  ungroup() %>%
+  
+  mutate(bfca_weighted_ppr = (bfca_ppr * travel_time_gaus)/bfca_colsum)
 
+doctors %<>% 
+  left_join(fca_ttm %>% 
+              transmute(doctor_id, fca_ppr) %>% 
+              group_by(doctor_id) %>%
+              summarize(fca_ppr = first(fca_ppr)), 
+            by = "doctor_id") %>%
+  left_join(bfca_ttm %>% 
+              transmute(doctor_id, bfca_weighted_ppr) %>%
+              group_by(doctor_id) %>%
+              summarize(bfca_ppr = first(bfca_weighted_ppr)),
+            by = "doctor_id")
+
+data_da_2016_poly %<>% 
+  left_join(fca_ttm %>%
+              transmute(GeoUID, fca_weighted_ppr) %>%
+              group_by(GeoUID) %>% 
+              summarize(fca_access = sum(fca_weighted_ppr)),
+            by = "GeoUID") %>%
+  left_join(bfca_ttm %>% 
+              transmute(GeoUID, bfca_weighted_ppr) %>%
+              group_by(GeoUID) %>% 
+              summarize(bfca_access = sum(bfca_weighted_ppr)),
+            by = "GeoUID")
+```
+
+## Map FCA Results
+
+```{r}
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "fca_access", palette = "viridis", style = "jenks", title = "FCA Accessibility")  +
+  tm_layout(legend.position = c("left","bottom"))
+
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "bfca_access", palette = "viridis", style = "jenks", title = "BFCA Accessibility")  +
+  tm_layout(legend.position = c("left","bottom"))
+
+plot(data_da_2016_poly$fca_access, data_da_2016_poly$bfca_access)
+
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill("grey75") +
+  tm_shape(doctors_ppr) + 
+  tm_bubbles(size = "fca_ppr", 
+             col = "fca_ppr", 
+             palette = "viridis", 
+             style = "jenks", 
+             title.size = "FCA PPR", 
+             title.col = "") +
+  tm_layout(legend.position = c("left","bottom"))
+
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill("grey75") +
+  tm_shape(doctors_ppr) + 
+  tm_bubbles(size = "bfca_ppr", 
+             col = "bfca_ppr", 
+             palette = "viridis", 
+             style = "jenks", 
+             title.size = "BFCA PPR", 
+             title.col = "") +
+  tm_layout(legend.position = c("left","bottom"))
+
+plot(doctors_ppr$fca_ppr, doctors_ppr$bfca_ppr)
+```
+
+# OLD CODE FROM MARIA's THESIS
 
 ```{r load data}
 traveltimes <- read.csv("./data/Hamilton Travel Times.csv")
 population <- read.csv("./data/DA Populations.csv")
-doctors <- read.csv("./data/HamiltonDoctors.csv")
+#doctors <- read.csv("./data/HamiltonDoctors.csv")
 Ham_households <- read.csv("./data/Hamilton Households.csv")
 ```
 
