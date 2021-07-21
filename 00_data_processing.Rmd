@@ -11,7 +11,7 @@ library(r5r)
 library(sf)
 library(smoothr)
 library(tidyverse)
-#library(tidytransit)
+library(tidytransit)
 library(tmap)
 
 # options
@@ -145,12 +145,17 @@ departure_datetime <- as.POSIXct("2021-06-29 08:00:00",
 
 Prepare origins and destinations:
 
-```{r}
+```{r prepare origins and destinations, warning = FALSE}
 # origins
 origins_i <-  data_da_2016_point %>% 
+  filter(Population >0) %>%
   transmute(id = GeoUID, geometry) %>% 
   st_centroid() %>%
   st_transform(nyc_cb_point, crs = 4326)
+
+# analyses revealed a problem with network snapping for this DA
+# so let's manually alter its coordinates to better locate around some roads
+st_geometry(origins_i[origins_i$id == "35250986", ]) <-  st_sfc(st_point(c(-79.987629, 43.263348)))
 
 # destinations
 destinations_j <-  doctors %>% 
@@ -168,8 +173,7 @@ ttm <- travel_time_matrix(r5r_core = r5_network,
                           destinations = destinations_j,
                           mode = c("CAR"),
                           departure_datetime = departure_datetime,
-                          max_walk_dist = 4000,
-                          max_trip_duration = 120, verbose = FALSE)
+                          max_trip_duration = 300, verbose = FALSE)
 ```
 
 # Save
