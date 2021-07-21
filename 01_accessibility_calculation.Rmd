@@ -1,26 +1,22 @@
 ---
-title: "R Notebook"
+title: "Workbook 01: Accessibility Calculation"
 output: html_notebook
 ---
 
 ```{r, include = FALSE}
-library(cancensus)
 library(magrittr)
-library(osmextract)
-library(r5r)
 library(sf)
-library(smoothr)
 library(tidyverse)
-#library(tidytransit)
 library(tmap)
 
 # options
 tmap_mode("plot")
-options(cancensus.api_key = "CensusMapper_8a670a7173437cf3e6db57b780ae14bf")
-options(java.parameters = "-Xmx8G")
-dir.create("./results")
-dir.create("./r5_graph") # for the r5 network graph
-r5_path <- file.path("./r5_graph")
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+# clear environment
+rm(list = ls())
 ```
 
 # Load Results
@@ -30,6 +26,7 @@ load("./results/output_workbook_00.RData")
 ```
 
 # Calculate Accessibility
+
 ## Floating Catchment Accessibility
 
 ```{r}
@@ -157,19 +154,30 @@ plot(doctors$fca_ppr, doctors$bfca_ppr)
 # OLD CODE FROM MARIA's THESIS
 
 ```{r load data}
-traveltimes <- read.csv("./data/Hamilton Travel Times.csv")
-population <- read.csv("./data/DA Populations.csv")
+#traveltimes <- read.csv("./data/Hamilton Travel Times.csv")
+# use updated travel time matrix
+Hamiltontimes <- ttm %>% 
+  mutate(travel_time = as.double(travel_time)) %>%
+  pivot_wider(id_cols = fromId, names_from = toId, names_prefix = "X", 
+              values_from = travel_time, values_fill = 999) %>%
+  rename(DAUID = fromId) %>%
+  semi_join(data_da_2016_poly %>% transmute(DAUID = GeoUID, Households) %>% filter(Households > 0))
+
+#population <- read.csv("./data/DA Populations.csv") # unused
 #doctors <- read.csv("./data/HamiltonDoctors.csv")
-Ham_households <- read.csv("./data/Hamilton Households.csv")
+#Ham_households <- read.csv("./data/Hamilton Households.csv")
+Ham_households <- data_da_2016_poly %>% 
+  st_drop_geometry() %>% 
+  transmute(DAUID = GeoUID, Data = Households)
 ```
 
 ```{r prepare data}
-Hamiltontimes <- semi_join(traveltimes, population, by="DAUID") %>% select(-1)
-population <- semi_join(population, Hamiltontimes, by="DAUID")
-doctors <- select(doctors,-1)
+#Hamiltontimes <- semi_join(traveltimes, population, by="DAUID") %>% select(-1)
+#population <- semi_join(population, Hamiltontimes, by="DAUID")
+#doctors <- select(doctors,-1)
 ```
 
-# Maria's New Model
+## Maria's New Model
 
 ```{r newmodel}
 alpha = 0.065
@@ -178,6 +186,7 @@ omega = 22
 #traveltimes <- read.csv("OD Matrix.csv")
 #Hamiltontimes <- semi_join(traveltimes,Ham_households,by="DAUID")
 #Ham_households <- semi_join(Ham_households,Hamiltontimes,by="DAUID")
+
 H_tot <- sum(Ham_households$Data)
 Zj <- read.csv("./data/HamiltonDoctors.csv")
 Zj <- select(Zj,-1)
@@ -222,7 +231,7 @@ calTij <- function(expo,sums,Tij){
 Tij <- calTij(expo,sums,Tij)
 ```
 
-# New Model with New Rj
+## New Model with New Rj
 
 ```{r new rj}
 rj <- data.frame(OBJECTID)
@@ -267,7 +276,7 @@ sums$Sum <- apply(expo[,2:181],1,sum)
 Tij <- calTij(expo,sums,Tij)
 ```
 
-# New Accessibilities
+## New Accessibilities
 
 ```{r}
 alpha = 0.065
@@ -291,11 +300,9 @@ ai <- data.frame(DAUID)
 expo <- Hamiltontimes
 constant <- Hamiltontimes
 sums <- data.frame(DAUID)
-for(j in 2:length(constant))
-{
-  for(i in constant$DAUID)
-  {
-    constant[constant$DAUID==i, j] <- Hamiltontimes[Hamiltontimes$DAUID==i,j]*beta1 + betak2*log10(omega*Zj$Sum_count[j-1])+betak3*Rj_new$Ratios[j-1] # < is it Rj_new here?
+for(j in 2:length(constant)){
+  for(i in constant$DAUID){
+    constant[constant$DAUID==i, j] <- Hamiltontimes[Hamiltontimes$DAUID==i,j]*beta1 + betak2*log10(omega*Zj$Sum_count[j-1])+betak3*Rj$Ratios[j-1]
     expo[expo$DAUID==i,j] <- exp(constant[constant$DAUID==i,j])
   }
 }
@@ -306,7 +313,6 @@ for(k in ai$DAUID)
   }
 ```
 
-
 # Compare Results
 
 ```{r merge}
@@ -316,34 +322,40 @@ data_da_2016_poly %<>%
             by = "GeoUID")
 ```
 
-
 ```{r plot}
 #plot(doctors_ppr$fca_ppr, doctors_ppr$Ratio, main = "cdh ppr vs maria ppr")
 #plot(da_fca_access$fca_access, da_fca_access$Accessibility, main = "cdh fca vs maria fca")
 #plot(da_fca_access$fca_access, da_fca_access$Value, main = "cdh fca vs maria model")
 ```
 
-# Map 
+## Map
 
 ```{r}
 tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
   tm_fill("grey90") +
   tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "fca_access", palette = "viridis", style = "jenks", title = "FCA Accessibility")  +
+  tm_layout(legend.position = c("left","bottom"))
+
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "bfca_access", palette = "viridis", style = "jenks", title = "BFCA Accessibility")  +
+  tm_layout(legend.position = c("left","bottom"))
+
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
   tm_fill(col = "mnl_access", palette = "viridis", style = "jenks", title = "MNL Accessibility")  +
   tm_layout(legend.position = c("left","bottom"))
+
+plot(data_da_2016_poly$fca_access, data_da_2016_poly$mnl_access)
+plot(data_da_2016_poly$bfca_access, data_da_2016_poly$mnl_access)
 ```
 
+# Save
 
-```{r maps, warning = FALSE, message = FALSE}
-load("./data/hamilton_da_2016.RData")
-
-hamilton_da_2016 %<>% mutate(DAUID = as.numeric(as.character(DA))) %>% left_join(da_fca_access, by = "DAUID")
-
-
-tm_shape(hamilton_da_2016) + tm_fill(col = "fca_access", style = "jenks", title = "cdh fca access")
-tm_shape(hamilton_da_2016) + tm_fill(col = "Accessibility", style = "jenks", title = "maria fca access")
-tm_shape(hamilton_da_2016) + tm_fill(col = "Value", style = "jenks", title = "maria model")
+```{r}
+save(data_da_2016_poly, doctors, ontario_poly, ttm, 
+     file = "./results/output_workbook_01.RData", compress = TRUE)
 ```
-
-
-

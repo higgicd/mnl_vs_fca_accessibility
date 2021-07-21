@@ -1,0 +1,180 @@
+---
+title: "Accessibility to Primary Care Physicians: Comparing Floating Catchments with a Multinomial Logit Approach"
+author:
+  - name: Author One
+    email: author1@example.com
+    affiliation: Some University
+  - name: Author Two
+    email: author2@example.com
+    affiliation: Another University
+    footnote: 1
+  - name: Author Three
+    email: author3@example.com
+    affiliation: Some University
+  - name: Author Four
+    email: author4@example.com
+    affiliation: Some University
+address:
+  - code: Some University
+    address: Department, Street, City, State, Zip
+  - code: Another University
+    address: Department, Street, City, State, Zip
+footnote:
+  - code: 1
+    text: "Corresponding Author"
+abstract: "text goes here"
+bibliography: references.bib
+output: html_notebook
+---
+
+```{r load packages, include = FALSE}
+library(magrittr)
+library(sf)
+library(tidyverse)
+library(tmap)
+
+# options
+tmap_mode("plot")
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r clear environment}
+rm(list = ls())
+```
+
+```{r load results}
+load("./results/output_workbook_01.RData")
+```
+
+# Introduction
+
+The COVID-19 global pandemic has emphasized the importance of healthcare accessibility -- particularly access to primary care physicians, who provide the first point of contact between patients and the healthcare system. In Canada, the Canada Health Act states that all residents should have "reasonable access" to healthcare. However, the 2017 Canadian Community Health Survey revealed that 15.3% of Canadians aged 12 or over did not have a primary care physician, of whom 17.2% stated that there is no physician accessible within their area [@statcan2019].
+
+Accessibility to healthcare services is defined by both spatial and aspatial components [@joseph1982]. In line with traditional definitions of accessibility [@hansen1959], the first component considers the geographic distribution of available healthcare services reachable from a given location on the transportation network. Transportation accessibility is thus comprised of two aspects: the number of opportunities and ease of access. Accessibility to a given type of opportunity, such as healthcare, can therefore be improved through either an increase in the number of available opportunities or through improvements to the transportation network. Aspatial factors also affect accessibility to healthcare services. These include factors such as the cost and quality of healthcare services and the socioeconomic, demographic, and mobility profile of potential users [@joseph1982]. In this regard, access to healthcare is a multidimensional problem.
+
+To measure the geographic distribution of healthcare accessibility, researchers have utilized several strategies. First, previous research has captured the number of healthcare services accessible from a location, such as the .. However, such approaches simply reflect the sum of services available from a place and do not capture demand or congestion effects that impact their availability. To remedy this, alternative approaches have been used to account for the demand for healthcare services in the estimate accessibilities. Based on the work of Radke and Mu [-@radke2000], Luo and Wang introduced the Two-step Floating Catchment Area (2SFCA) method that first estimates the demand for healthcare at service locations from population zones and then allocates the level of service back to the population zones. In this case, the catchment area that defines accessibility between the service locations and population zones is based on a binary measure of travel impedance. Since then, various improvements have been made to the 2SFCA approach, including variable catchment sizes [@mcgrail2009] and the use of categorical [@luo2009], continuous [@dai2010], and adaptive [@bauer2016] impedance functions to better capture the friction of distance.
+
+Beyond this, other authors have sought to improve the ways in which demand is captured in floating catchment approaches. The original 2SFCA has been criticized for over-estimating demand and under-estimating levels of service in the estimation of accessibilities due to the multiple-counting of populations that arises from the overlapping catchments in a study area. In response, researchers have proposed solutions such as the Three-step Floating Catchment Area (3SFCA) [@wan2012], Modified 2SFCA (M2SFCA) [@delamater2013], and Balanced 2SFCA (B2SFCA) [@paez2019] methods. Of these, the B2SFCA is the only approach that preserves the original population and resulting levels of service in calculating floating catchment accessibilities.
+
+However, ... existing methods limited.
+
+In general, there are four families of accessibility measures: infrastructure-based, person-based, place-based, and utility-based [@geurs2004]. Of these, place-based accessibility focuses on the spatial distribution of opportunities accessible from a given location using the transportation network... utility-based approaches...
+
+In response, this research proposes the use of a multinomial logit (MNL) destination choice model to measure accessibility to healthcare services. In contrast to FCA approaches, each patient is, on average, assigned to a single clinic, avoiding the issue of double-counting and inflation/deflation of the demand and levels-of-service respectively. To illustrate the potential of the MNL approach, we compare it against the use of the 2SFCA and B2SFCA approaches using a continuous decay function.
+
+# Methodology
+
+To address the limitations of existing methods, a novel methodology is developed which assigns trips from population centres to clinics. The general form of this function is as follows:
+
+$$
+T_{ij} = f(H_i, Z_j, R_j, t_{ij}, \beta)
+$$
+
+where $T_{ij}$ is the number of trips from zone $i$ to clinic $j$, $H_i$ is the number of households in zone $i$, $Z_j$ is the number of doctors at clinic $j$, $R_j$ is the demand-to-capacity ratio at clinic $j$ (note this is inverted from the physician-to-population ratios used in previous FCA approaches), $t_{ij}$ is the travel time between zones $i$ and $j$, and $\beta$ is a row vector of parameters to be estimated.
+
+To estimate these parameters, information minimization is used as this approach allows for the least-biased parameter estimation and has been proven to be identical to utility maximization [@anas1983]. Based on information minimization theory, the probability that a household in zone i will visit clinic j can be estimated as follows:
+
+$$
+MAX_{T_{ij}} E = -\sum_{j \in J} \sum_{i \in I} T_{ij} log(T_{ij})
+$$
+
+Subject to the following constraints:
+
+$$
+\sum_{j \in J}T_{ij} = \alpha H_i \forall i \in I
+$$
+
+number of trips to j equals the average number of visits to the doctor per household made over all households in the study area
+
+$$
+\sum_{i \in I} \sum_{j \in J} T_{ij} t_{ij} = \bar{t}T
+$$
+
+travel time and trips across all ij pairs is equal to the average observed travel time for home-based trips to clinics multiplied by the total number of daily trips to the clinics
+
+$$
+\sum_{i \in I} \sum_{j \in J} T_{ij} log(C_j) = \sum_{i \in I} \sum_{j \in J}T_{ij} log \omega Z_j = \bar{C}T
+$$
+
+that the number of trips doesn't exceed service capacity
+
+$$
+\sum_{i \in I} \sum_{j \in J} T_{ij} R_j = \bar{R}T
+$$
+
+that the total number of trips between zones ($T_{ij}$) multiplied by the demand-to-capacity ratios at the clinics ($R_j$) is equal to the average observed demand-to-capacity ratio $\bar{R}$ multiplied by the total number of daily trips to clinics $T$.
+
+The service capacities and demand-to-capacity ratios are calculated as follows:
+
+$$
+C_j = \omega Z_j \\
+R_j = \frac{\sum_{i \in I} T_{ij}}{C_j} = \frac{\sum_{i \in I} T_{ij}}{\omega Z_j}
+$$
+
+Solving this set of equations yields the following:
+
+$$
+T_{ij} = \alpha H_i P_{ij}
+$$
+
+This is a singly-constrained gravity model where the probability that a household in zone $i$ will visit clinic $j$ is as follows:
+
+$$
+P_{ij} = \frac{e^{\beta_1 t_{ij} + \beta_{K+2} log \omega Z_j + \beta_{K + 3} R_j}}{\sum_j\prime e^{\beta_1 t_{ij}\prime + \beta_{K+2} log \omega Z_j\prime + \beta_{K + 3} R_j\prime}}
+$$
+
+$\beta_1$, $\beta_{K+2}$, and $\beta_{K + 3}$ are all parameters which should be estimated iteratively in order to meet the outlined constraints. However, due to a lack of observed data on trips to doctors, these parameters are instead assumed to be -0.05, 1, and -0.5, respectively. This is to ensure that increased travel times and demand-to-capacity ratios reduce the probability that a household in zone i will visit clinic j, and increased capacity at clinic j increases the probability. As a result, clinics with higher demand and longer travel times attract fewer trips, and larger clinics attract more trips. The specific parameter values chosen are based on the following considerations:
+
+-0.05 is in the range of typical auto travel time parameters in GTHA logit mode choice models.
+Random utility theory requires $\beta_{K+2}$ to lie between 0 to 1 in value. It is set equal to 1 in this case to maximize the attractiveness of larger clinics.
+No theory is currently available to guide the choice of the β_(K+3) parameter and so -0.5 is chosen as a “first guess” at a parameter value that would produce a reasonable sensitivity to clinic over-crowding, but not prevent over-crowding from occurring.
+
+This model is a multinomial logit destination choice model, which ensures that demand at clinics is not over-estimated, as each patient on average is assigned to a single clinic and is not double counted, as with the 2SFCA method. As shown by Anas, multinomial logit models are equivalent to gravity models (Anas, 1983). Following Ben-Akiva and Lerman (Ben-Akiva & Lerman, 1985), accessibility can be defined within random utility theory as the expected maximum utility for a trip. For the multinomial logit model, it can be shown that this is the natural logarithm of the denominator of the logit model (the so-called “logsum” or “inclusive value” term), yielding for this model the following accessibility measure:
+
+$$
+a_i = log(\sum_{j\prime} e^{\beta_1 t_{ij}\prime + \beta_{K+2} log \omega Z_j\prime + \beta_{K + 3} R_j\prime})
+$$
+
+In order to ensure that $\bar{R}$ is approximately equal to 1, the $\alpha$ and $\omega$ parameters are assumed to be 0.065 and 22, respectively. Since $R_j$ is a function of $T_{ij}$ and vice-versa, an iterative approach is taken to estimate the $R_j$ values.
+
+This approach involves location choice modelling by maximizing utility for patients, with larger clinics attracting more trips and more congested clinics with longer travel times attracting fewer trips.
+
+# Study Area
+
+# Results
+
+This pattern indicates that the highest accessibilities to primary care physicians correspond to the downtown area of Hamilton, where a large number of clinics are concentrated. Accessibility to physicians decreases with increased distance from the downtown area. The distribution of E2SFCA accessibilities to primary care physicians is presented in XX.
+
+```{r fca map}
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "fca_access", palette = "viridis", style = "jenks", title = "E2SFCA\nAccessibility")  +
+  tm_layout(legend.position = c("left","bottom"))
+```
+
+The B2SFCA...
+
+```{r bfca map}
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "bfca_access", palette = "viridis", style = "jenks", title = "B2SFCA\nAccessibility")  +
+  tm_layout(legend.position = c("left","bottom"))
+```
+
+Similar to the pattern produced by the E2SFCA method, this pattern indicates that the highest accessibilities correspond to the downtown area and the lowest accessibilities correspond to the outskirts of the city. However, the area with the highest accessibilities is much larger with the proposed method, encompassing both the city centre and some suburban areas. Moreover, the values of the accessibilities are much higher with the proposed method as compared to the E2SFCA method. This is due to the difference in the definition of accessibility in both methods – the E2SFCA method defines accessibilities based on the physician-to-population ratios of clinics, resulting in very small values for accessibility. In contrast, the proposed method defines accessibilities as the logsum of the multinomial logit model, resulting in larger values for accessibility. The distribution of accessibilities to primary care physicians based on the proposed methodology is presented in XX
+
+```{r mnl map}
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "mnl_access", palette = "viridis", style = "jenks", title = "MNL\nAccessibility")  +
+  tm_layout(legend.position = c("left","bottom"))
+```
+
+# Discussion and Conclusions
+
+This study develops a multinomial logit destination choice model for calculating transportation accessibility to primary care physicians in the City of Hamilton. This method is compared to the E2SFCA method, and an analysis of the impact of income on accessibility is undertaken using both methods. The accessibility patterns produced by both methods indicate that the highest accessibilities to primary care physicians are in the downtown area of Hamilton. However, the area with the highest accessibilities is much larger with the proposed method, encompassing both the city centre and some suburban areas. The proposed method produces more plausible distributions as compared to the E2SFCA method, as more DAs have either medium to high accessibilities or extremely low accessibilities. In contrast, the E2SFCA method results in many high-access areas despite congested clinics, as well as low-access areas with higher accessibilities than the proposed method despite lower capacities and longer travel times. Overall, the proposed methodology improves upon existing methods, as it addresses all six of the accessibility axioms and does not over-estimate demand. Both the E2SFCA method and the proposed method result in low-income areas having the highest accessibilities. The sensitivity analysis suggests that increased development and increased congestion in the City of Hamilton both result in reduced accessibilities, although the model is more sensitive to the number of households in comparison to travel times. The model can therefore be used to project accessibilities in the future and adjust clinic capacities accordingly. However, more work is required to calibrate the model to better fit observed data and to include non-auto modes of travel. 
+
+# References
