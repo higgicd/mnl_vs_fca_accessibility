@@ -245,18 +245,18 @@ In this formulation, the travel-time weighted populations sum to the
 original population values and do not deflate the level-of-service at
 the clinics. By extension, the levels of service available at the
 population centres are not inflated through multiple counting. For this
-research, we employ both the 2SFCA and B2SFCA approaches with a Gaussian
-impedance function:
+research, we employ both the 2SFCA and B2SFCA approaches with a negative
+exponential impedance function:
 
 \[
 W_{ij} = e^{-\beta t_{ij}}
 \]
 
-where \(\beta\) is a parameter that determines the decay of the Gaussian
-function and \(t_{ij}\) is the travel time between clinic \(j\) and
-population centre \(i\). The \(\beta\) parameter is set to 0.115 so that
-the Gaussian weight would be equal to 0.1 at a 20-minute travel time
-threshold.
+where \(\beta\) is a parameter that determines the decay of the function
+and \(t_{ij}\) is the travel time between clinic \(j\) and population
+centre \(i\). The \(\beta\) parameter is set to 0.05 as this is in the
+range of typical auto travel time parameters in logit mode choice models
+calibrated in the Greater Toronto and Hamilton Area.
 
 \hypertarget{utility-based-method}{%
 \subsection{Utility-based Method}\label{utility-based-method}}
@@ -347,7 +347,8 @@ The service capacities and demand-to-capacity ratios are calculated as
 follows:
 
 \[
-C_j = \omega Z_j \\
+C_j = \omega Z_j
+\] \[
 R_j = \frac{\sum_{i \in I} T_{ij}}{C_j} = \frac{\sum_{i \in I} T_{ij}}{\omega Z_j}
 \]
 
@@ -364,16 +365,17 @@ household in zone \(i\) will visit clinic \(j\) is as follows:
 P_{ij} = \frac{e^{\beta_1 t_{ij} + \beta_{K+2} log \omega Z_j + \beta_{K + 3} R_j}}{\sum_j\prime e^{\beta_1 t_{ij}\prime + \beta_{K+2} log \omega Z_j\prime + \beta_{K + 3} R_j\prime}}
 \]
 
-\(\beta_1\), \(\beta_{K+2}\), and \(\beta_{K + 3}\) are all parameters
-which should be estimated iteratively in order to meet the outlined
+Ideally, the \(\beta_1\), \(\beta_{K+2}\), and \(\beta_{K + 3}\)
+parameters would be estimated iteratively in order to meet the outlined
 constraints. However, due to a lack of observed data on trips to
 doctors, these parameters are instead chosen based on the following
 considerations:
 
 \begin{itemize}
 \item
-  -0.05 is in the range of typical auto travel time parameters in GTHA
-  logit mode choice models.
+  The \(\beta_1\) travel time impedance parameter is set to -0.05 based
+  on previous choice models in the region and to align with the 2SFCA
+  and B2SFCA approaches above
 \item
   Random utility theory requires \(\beta_{K+2}\) to lie between 0 to 1
   in value. It is set equal to 1 in this case to maximize the
@@ -382,85 +384,226 @@ considerations:
   No theory is currently available to guide the choice of the
   \(\beta_{K+3}\) parameter and so -0.5 is chosen as a ``first guess''
   at a parameter value that would produce a reasonable sensitivity to
-  clinic over-crowding, but not prevent over-crowding from occurring.
+  clinic over-crowding, but not prevent over-crowding from occurring
 \end{itemize}
 
 These values ensure that increased travel times and demand-to-capacity
 ratios reduce the probability that a household in zone \(i\) will visit
 clinic \(j\), and increased capacity at clinic \(j\) increases the
-probability. As a result, clinics with higher demand and longer travel
-times attract fewer trips, and larger clinics attract more trips.
+probability.
 
-This model is a multinomial logit destination choice model, which
-ensures that demand at clinics is not over-estimated, as each patient on
-average is assigned to a single clinic and is not double counted, as
-with the 2SFCA method. As shown by Anas (1983), multinomial logit models
-are equivalent to gravity models. Following Ben-Akiva and Lerman
-(Ben-Akiva \& Lerman, 1985), accessibility can be defined within random
-utility theory as the expected maximum utility for a trip. For the
-multinomial logit model, it can be shown that this is the natural
-logarithm of the denominator of the logit model (the so-called
-``logsum'' or ``inclusive value'' term), yielding for this model the
-following accessibility measure:
+In order to ensure that \(\bar{R}\) is approximately equal to 1, the
+\(\alpha\) and \(\omega\) parameters are assumed to be 0.065 visits to
+the doctor per household and 22 patients seen by a doctor per day, on
+average, respectively. Since \(R_j\) is a function of \(T_{ij}\) and
+vice-versa, an iterative approach is taken to estimate the \(R_j\)
+values. The multonomial logit destination choice model ensures that
+demand at clinics is not over-estimated, as each patient on average is
+assigned to a single clinic and is not double counted, as occurs in the
+2SFCA method. The end result is an approach that involves location
+choice modelling by maximizing utility for patients, with clinics with
+higher demand and longer travel times attracting fewer trips while
+larger clinics and those closer to the origins attract more trips.
+
+\hypertarget{utility-based-accessibility}{%
+\subsection{Utility-based
+Accessibility}\label{utility-based-accessibility}}
+
+As shown by Anas (1983), multinomial logit models are equivalent to
+gravity models. Following Ben-Akiva and Lerman (Ben-Akiva \& Lerman,
+1985), accessibility can be defined within random utility theory as the
+expected maximum utility for a trip. For the multinomial logit model, it
+can be shown that this is the natural logarithm of the denominator of
+the logit model (the so-called ``logsum'' or ``inclusive value'' term),
+yielding for this model the following accessibility measure:
 
 \[
 a_i = log(\sum_{j\prime} e^{\beta_1 t_{ij}\prime + \beta_{K+2} log \omega Z_j\prime + \beta_{K + 3} R_j\prime})
 \]
 
-In order to ensure that \(\bar{R}\) is approximately equal to 1, the
-\(\alpha\) and \(\omega\) parameters are assumed to be 0.065 and 22,
-respectively. Since \(R_j\) is a function of \(T_{ij}\) and vice-versa,
-an iterative approach is taken to estimate the \(R_j\) values. The end
-result is an approach that involves location choice modelling by
-maximizing utility for patients, with larger clinics attracting more
-trips and more congested clinics with longer travel times attracting
-fewer trips.
-
 \hypertarget{study-area}{%
 \section{Study Area}\label{study-area}}
 
+The study area for this research is the City of Hamilton in Ontario,
+Canada. Based on data from the 2016 Canadian Census of Population, the
+population of Hamilton is 536,917 living in 211,596 households. Based on
+the assumed \(\omega = 0.065\) visits to the doctor per household, this
+results in 13,753.74 trips to the doctor entering the MNL model. The
+left panel of Figure \ref{fig:study_area_map} plots population densities
+in the Dissemination Area census small geographic units in the City of
+Hamilton, highlighting that the higher-density urban core is surrounded
+by lower-density suburbs that extend into land that is largely rural in
+character.
+
+Information on the count and location of primary care physicians was
+obtained using the College of Physicians and Surgeons of Ontario's
+online registration database. Clinic locations were geocoded based on
+their address and records were aggregated to count the number of
+physicians practicing at each unique location. The data for this paper
+have been used previously in the paper by Páez et al. (2019), although
+in this case we consider only clinics that are within the spatial extent
+of the City of Hamilton. While this does introduce edge effects in the
+calculation of accessibility, limiting the study extent to a closed
+system permits calculation of the multinomial logit model's congestion
+effects and utility-based accessibilities. In total, there are 631
+primary care physicians available at clinics in the City of Hamilton in
+our data. Note that this is not strictly the number of physicians, as
+some physicians offer services at more than one clinic. Rather, it
+reflects the availability of physicians at given locations. The right
+panel of Figure \ref{fig:study_area_map} plots the location and total
+number of available physicians at the clinic locations. This total
+produces a city-wide average provider-to-population ratio of 117.52
+primary care doctors available per 100,000 people. Based on our
+assumption of \(\alpha = 22\) patients seen per doctor every day, this
+results in a total capacity of 13,882 patient visits per day in the MNL
+model formulation.
+
 \begin{figure}
-\includegraphics[width=1\linewidth]{./img/Fig_1} \caption{Population Density and Physician Locations}\label{fig:fig 1}
+\includegraphics[width=1\linewidth]{./img/study_area_map} \caption{\label{fig:study_area_map}Population Density and Physician Locations}\label{fig:plot study_area_map}
 \end{figure}
 
 \hypertarget{results}{%
 \section{Results}\label{results}}
 
+\hypertarget{demand-and-clinic-level-of-service}{%
+\subsection{Demand and Clinic Level of
+Service}\label{demand-and-clinic-level-of-service}}
+
+To discuss the results, we begin by focusing on the results associated
+with how each of the methods calculates demand and levels of service at
+the clinic locations. The level of service for the FCA approaches is the
+local provider-to-population ratio for each clinic while the MNL model
+calculates trip demand-to-patient capacity ratios. To make this
+comparable, we first take the inverse of the MNL ratios to reflect
+patient capacity-to-trip demand ratio (CDR). Figure \ref{fig:ppr_dist}
+displays a pair plot of the density of each level-of-service statistic
+and their relationship and correlations with one another. The plot
+highlights how the 2SFCA and B2SFCA methods significantly differ in the
+ways in which they allocate demand to the clinics. However, it is
+interesting to note the relatively high correlation between the
+population-to-provider ratios at the clinics in the 2SFCA and the
+capacity-to-demand ratios ratios in the MNL model with the scatterplot
+revealing some non-linearity in this relationship across the methods.
+
 \begin{figure}
-\includegraphics[width=1\linewidth]{./img/Fig_2} \caption{Figure 2. Comparing Distributions}\label{fig:fig 2}
+\includegraphics[width=1\linewidth]{./img/pair_plot_ppr} \caption{\label{fig:ppr_dist}Comparing Accessibility Distributions}\label{fig:ppr_dist_fig}
 \end{figure}
 
-2SFCA: This pattern indicates that the highest accessibilities to
-primary care physicians correspond to the downtown area of Hamilton,
-where a large number of clinics are concentrated. Accessibility to
-physicians decreases with increased distance from the downtown area. The
-distribution of E2SFCA accessibilities to primary care physicians is
-presented in XX.
+Figure \ref{fig:los_maps} displays the levels of service for the clinic
+locations. In general, more urban clinics tend to exhibit higher levels
+of demand and lower levels of service across all three models. However,
+the provider-to-population ratios for the individual clinics in the
+2SFCA are extremely small compared to results from the B2SFCA model,
+highlighting how the original method's multiple counting tends to
+inflate the (travel time weighted) population numbers in each clinic's
+catchment and deflate the level of service available at the clinics. In
+contrast, the PPRs in the B2SFCA method are readily interpretable as the
+local ratio of doctors per person for a given clinic considering the
+(travel-time weighted and apportioned) populations within its catchment.
+Similarly, the MNL CDRs reflect the relationship between the trip demand
+and patient capacity based on the assumed rates. In terms of spatial
+trends, results from the 2SFCA and MNL models suggest both calculate
+higher levels of service at larger clinics in the urban core as well as
+at a larger clinic in the city's rural north-west. In contrast, the
+B2SFCA method generally produces higher levels of service in an
+east-to-west direction. This could reflect boundary effects in the study
+area that omit the large populations present in the rest of the Greater
+Toronto Area on the northern side of Lake Ontario that may also have
+access to these clinics by driving.
 
 \begin{figure}
-\includegraphics[width=1\linewidth]{./img/Fig_3} \caption{Figure 3. Accessibility Results}\label{fig:fig 3}
+\includegraphics[width=1\linewidth]{./img/los_maps} \caption{\label{fig:los_maps}Comparing Accessibility Distributions}\label{fig:los_maps_fig}
 \end{figure}
 
-The B2SFCA\ldots{}
+\hypertarget{healthcare-accessibility}{%
+\subsection{Healthcare Accessibility}\label{healthcare-accessibility}}
 
-MNL: Similar to the pattern produced by the 2SFCA method, this pattern
-indicates that the highest accessibilities correspond to the downtown
-area and the lowest accessibilities correspond to the outskirts of the
-city. However, the area with the highest accessibilities is much larger
-with the proposed method, encompassing both the city centre and some
-suburban areas. Moreover, the values of the accessibilities are much
-higher with the proposed method as compared to the E2SFCA method. This
-is due to the difference in the definition of accessibility in both
-methods -- the E2SFCA method defines accessibilities based on the
-physician-to-population ratios of clinics, resulting in very small
-values for accessibility. In contrast, the proposed method defines
-accessibilities as the logsum of the multinomial logit model, resulting
-in larger values for accessibility. The distribution of accessibilities
-to primary care physicians based on the proposed methodology is
-presented in XX
+With the levels of service calculated above, the three models then
+calculate accessibility to healthcare services in Hamilton.
+Distributions, relationships, and correlations for the accessibility
+results are shown in Figure \ref{fig:access_dist}. In this case, all
+three models are highly correlated. The 2SFCA and B2SFCA produce nearly
+identical ditributions of results, although in the case of the balanced
+method, the accessibilities correspond to the sum of travel time
+weighted and apportioned provider-to-population ratios available in the
+population zones free of the inflation and deflation that occurs in the
+2SFCA. In contrast, the scatterplots of the MNL results again highlight
+some non-linearity in the way the utility-based accessibilities are
+calculated compared to the FCA methods.
 
 \begin{figure}
-\includegraphics[width=1\linewidth]{./img/Fig_4} \caption{Figure 4. Accessibility Difference Hot Spots}\label{fig:fig 4}
+\includegraphics[width=1\linewidth]{./img/pair_plot_access} \caption{\label{fig:access_dist}Comparing Accessibility Distributions}\label{fig:access_dist_fig}
+\end{figure}
+
+The general spatial trends are similar across all three models (Figure
+\ref{fig:access_maps}). The absolute accessibility values differ in
+accordance with the ways each method calculates its accessibility
+results. The FCA methods define accessibility based on the
+physician-to-population ratios of clinics, resulting in smaller values.
+In contrast, the MNL method defines accessibilities as the logsum of the
+multinomial logit model, resulting in larger values that have no direct
+interpretation. In general, the highest accessibilities to primary care
+physicians correspond to the downtown area of Hamilton, where a large
+number of clinics are concentrated. Accessibility to physicians
+generally decreases with increased distance from the downtown area.
+
+\begin{figure}
+\includegraphics[width=1\linewidth]{./img/access_maps} \caption{\label{fig:access_maps}Accessibility Results}\label{fig:plot access_maps}
+\end{figure}
+
+To better highlight significant differences in the spatial patterns of
+accessibility produced by each method, Figure \ref{fig:access_diff_maps}
+displays the absolute differences in the normalized accessibilities
+across models. In general, the MNL method tends to produce higher
+accessibilities for most zones compared to the FCA methods. In line with
+the distributions above, the 2SFCA and B2SFCA models appear to be most
+similar, with only slight absolute differences in the calculated
+accessibility values.
+
+\begin{figure}
+\includegraphics[width=1\linewidth]{./img/access_diff_maps} \caption{\label{fig:access_diff_maps}Accessibility Differences}\label{fig:plot access_diff_maps}
+\end{figure}
+
+To examine whether there are any spatial patterns in these differences,
+Figure \ref{fig:access_locm_maps} plots the results of Local Moran's I
+tests. To make the values comparable, we first normalize each
+accessibility vector between 0-1 and take the differences of the
+normalized values across each approach. Next, the Local Moran's I is
+calculated on the differences using queen-style contiguity weights, a
+critical significance level of \(p=0.05\), and without correcting for
+multiple testing. The resulting maps reveal some interesting patterns of
+spatial clustering in the calculated normalized differences,
+particularly across the two FCA models compared to the MNL model. Here,
+differences in accessibility are greatest between the FCA and MNL
+methods in the low-low (LL) cluster in the ring of outer suburbs that
+surround the city. In contrast, the calculated accessibilities are more
+consistent across the methods in the high-high (HH) cluster in the
+central part of the city. Differences in the remaining zones are not
+significant (NS).
+
+This overall pattern is likely due to the way the MNL approach handles
+clinic choices with populations tending to select their nearest clinics.
+On the one hand, the greater accessibilities in more suburban and rural
+zones likely derived from these populations accessing their closest
+facility. On the other hand, this also means that fewer individuals from
+more urban locations are competing for healthcare resources in these
+more suburban and rural areas, leading to higher levels of service at
+these suburban and rural clinics. In contrast, the FCA methods allocate
+populations to all clinics within their catchment area using weights
+derived from the impedance function. While this produces a smoothing of
+the accessibilities, it can result in lower levels of service and
+accessibility for clinics that populations may not actually use. This
+effect seems to be minimized in more urban locations featuring higher
+population densities and a greater number of clinics with available
+physicians. Comparing the normalized results from the 2SFCA and the
+B2SFCA models, the patterns of spatial clustering in the differences
+appears to be less associated with the city's urban-suburban-rural urban
+structure. While the B2SFCA method generally calculates slightly higher
+accessibilities across much of the city, the methods are most dissimilar
+in the south-west rural area.
+
+\begin{figure}
+\includegraphics[width=1\linewidth]{./img/access_locm_maps} \caption{\label{fig:access_locm_maps}Accessibility Difference Hot Spots}\label{fig:fig 4}
 \end{figure}
 
 \hypertarget{discussion-and-conclusions}{%
@@ -492,6 +635,19 @@ model can therefore be used to project accessibilities in the future and
 adjust clinic capacities accordingly. However, more work is required to
 calibrate the model to better fit observed data and to include non-auto
 modes of travel.
+
+reframes the calculation of healthcare accessibilities into tripmaking
+choices. Compared to
+
+FCA approaches consider provider-to-population ratios weighted by
+distance or travel time as a measure of accessibility to healthcare. In
+this sense, congestion at clinics is a function of the populations they
+serve within the travel time window defined by the specification of
+impedance. The MNL approach reframes the measurement of health
+accessibility into individual trips to visit primary care physicians,
+the capacity of physicians to see patients, and congestion effects from
+the estimated trips. The iterative fitting procedure results in the
+assignment of
 
 \hypertarget{references}{%
 \section*{References}\label{references}}

@@ -30,7 +30,8 @@ load("./results/output_workbook_00.RData")
 ## Floating Catchment Accessibility
 
 ```{r}
-beta <- log(0.1, base=exp(1))/-20
+#beta <- log(0.1, base=exp(1))/-20
+beta <- 0.05
 
 fca_ttm <- ttm %>%
   rename(GeoUID = fromId, doctor_id = toId) %>%
@@ -320,6 +321,8 @@ data_da_2016_poly %<>%
   left_join(ai %>% 
               transmute(GeoUID = as.character(DAUID), mnl_access = Value), 
             by = "GeoUID")
+
+doctors %<>% left_join(Rj_new %>% transmute(doctor_id = OBJECTID, mnl_dcr = Ratios), by = "doctor_id")
 ```
 
 ```{r plot}
