@@ -367,7 +367,7 @@ While the 2SFCA approach is a special case of a gravity-based accessibility meas
 
 Researchers have also sought to improve the ways in which supply and demand are modeled in floating catchment approaches. Previous research has shown that both demand and supply can be inflated/deflated in FCA methods [@delamater2013; @paez2019; @wan2012]. This is a consequence of the overlapping floating catchments that cause the populations in zones $i$ to be counted multiple times in the calculation of the provider-to-population ratio $R_j$. These levels-of-service are, in turn, counted multiple times when allocated back to the population zones in the calculation of $A_i$. In response, Wan et al. propose the use of additional Gaussian weights to modify the binary impedance function used by Luo and Wang [-@luo2003]. Delamater's [-@delamater2013] M2SFCA modifies the second step of the 2SFCA approach by squaring the impedance function to increase the rate of decay on the level of service. This is done to reflect the increased friction population centres may experience when accessing healthcare facilities in sub-optimally configured urban systems.
 
-However, neither of these approaches fully resolves the issue of demand and supply inflation/deflation. To that end, the B2SFCA approach from Páez et al. [-@paez2019] that replaces the impedance functions with row-standardized weights $W_{ij}^{i}$ in the first step:
+However, neither of these approaches fully resolves the issue of demand and supply inflation/deflation. To that end, the B2SFCA approach from Páez et al. [-@paez2019] replaces the impedance functions with row-standardized weights $W_{ij}^{i}$ in the first step:
 
 $$
 R_j = \frac{S_j}{\sum_i{P_iW_{ij}^{i}}}
