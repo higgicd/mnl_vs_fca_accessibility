@@ -65,19 +65,18 @@ fca_ttm <- ttm %>%
 bfca_ttm <- fca_ttm %>%
   filter(Population >0) %>%
   group_by(GeoUID) %>%
-  mutate(bfca_rowsum = sum(Population * travel_time_gaus)) %>% 
+  mutate(bfca_rowsum = sum(travel_time_gaus),
+         bfca_weighted_pop = Population * (travel_time_gaus/bfca_rowsum),
+         bfca_ppr_pop_zone = sum(bfca_weighted_pop)) %>%
   ungroup() %>%
-  
-  mutate(bfca_weighted_pop = (Population * travel_time_gaus)/bfca_rowsum) %>%
   
   # get bfca ppr
   group_by(doctor_id) %>%
-  mutate(#bfca_ppr_pop = sum(bfca_weighted_pop), #extra
+  mutate(bfca_ppr_pop_clinic = sum(bfca_weighted_pop),
          bfca_ppr = first(doctor_count) / sum(bfca_weighted_pop),
-         bfca_colsum = sum(bfca_ppr * travel_time_gaus)) %>%
-  ungroup() %>%
-  
-  mutate(bfca_weighted_ppr = (bfca_ppr * travel_time_gaus)/bfca_colsum)
+         bfca_colsum = sum(travel_time_gaus),
+         bfca_weighted_ppr = bfca_ppr * (travel_time_gaus/bfca_colsum)) %>%
+  ungroup()
 ```
 
 # Map FCA Results
@@ -90,9 +89,9 @@ doctors %<>%
               summarize(fca_ppr = first(fca_ppr)), 
             by = "doctor_id") %>%
   left_join(bfca_ttm %>% 
-              transmute(doctor_id, bfca_weighted_ppr) %>%
+              transmute(doctor_id, bfca_ppr) %>%
               group_by(doctor_id) %>%
-              summarize(bfca_ppr = first(bfca_weighted_ppr)),
+              summarize(bfca_ppr = first(bfca_ppr)),
             by = "doctor_id")
 
 data_da_2016_poly %<>% 
