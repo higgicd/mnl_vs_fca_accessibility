@@ -31,7 +31,7 @@ Catchments with a Utility-based Approach}
   {}%
   {\par}
 % For Pandoc 2.11+
-\newenvironment{CSLReferences}[3] % #1 hanging-ident, #2 entry spacing
+\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
  {% don't indent paragraphs
   \setlength{\parindent}{0pt}
   % turn on hanging indent if param 1 is 1
@@ -45,7 +45,7 @@ Catchments with a Utility-based Approach}
 \usepackage{calc} % for calculating minipage widths
 \newcommand{\CSLBlock}[1]{#1\hfill\break}
 \newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
-\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 
 
@@ -61,13 +61,13 @@ text goes here
 \end{abstract}
 
 \keywords{
-    accessibility analysis
+    healthcare accessibility
    \and
-    text
+    place-based accessibility
    \and
-    text
+    utility-based accessibility
    \and
-    text
+    destination choice model
   }
 
 \hypertarget{introduction}{%
@@ -256,7 +256,9 @@ where \(\beta\) is a parameter that determines the decay of the function
 and \(t_{ij}\) is the travel time between clinic \(j\) and population
 centre \(i\). The \(\beta\) parameter is set to 0.05 as this is in the
 range of typical auto travel time parameters in logit mode choice models
-calibrated in the Greater Toronto and Hamilton Area.
+calibrated in the Greater Toronto and Hamilton Area. Travel times are
+calculated based on car travel using a street network from OpenStreetMap
+and the \texttt{r5r} routing tool (Pereira et al. 2021).
 
 \hypertarget{utility-based-method}{%
 \subsection{Utility-based Method}\label{utility-based-method}}
@@ -275,7 +277,6 @@ T_{ij} = f(H_i, Z_j, R_j, t_{ij}, \beta)
 where:
 
 \begin{itemize}
-\tightlist
 \item
   \(T_{ij}\) is the number of trips from zone \(i\) to clinic \(j\)
 \item
@@ -316,7 +317,6 @@ Subject to the following constraints:
 where:
 
 \begin{itemize}
-\tightlist
 \item
   \(I\) is the set of all residential zones
 \item
@@ -523,13 +523,15 @@ calculate accessibility to healthcare services in Hamilton.
 Distributions, relationships, and correlations for the accessibility
 results are shown in Figure \ref{fig:access_dist}. In this case, all
 three models are highly correlated. The 2SFCA and B2SFCA produce nearly
-identical ditributions of results, although in the case of the balanced
+identical distributions of results, although in the case of the balanced
 method, the accessibilities correspond to the sum of travel time
 weighted and apportioned provider-to-population ratios available in the
 population zones free of the inflation and deflation that occurs in the
 2SFCA. In contrast, the scatterplots of the MNL results again highlight
 some non-linearity in the way the utility-based accessibilities are
-calculated compared to the FCA methods.
+calculated compared to the FCA methods. The thinner tail of the MNL
+distribution suggests the method also results in fewer population zones
+with lower accessibility compared to the FCA methods.
 
 \begin{figure}
 \includegraphics[width=1\linewidth]{./img/pair_plot_access} \caption{\label{fig:access_dist}Comparing Accessibility Distributions}\label{fig:access_dist_fig}
@@ -609,45 +611,96 @@ in the south-west rural area.
 \hypertarget{discussion-and-conclusions}{%
 \section{Discussion and Conclusions}\label{discussion-and-conclusions}}
 
-This study develops a multinomial logit destination choice model for
-calculating transportation accessibility to primary care physicians in
-the City of Hamilton. This method is compared to the E2SFCA method, and
-an analysis of the impact of income on accessibility is undertaken using
-both methods. The accessibility patterns produced by both methods
-indicate that the highest accessibilities to primary care physicians are
-in the downtown area of Hamilton. However, the area with the highest
-accessibilities is much larger with the proposed method, encompassing
-both the city centre and some suburban areas. The proposed method
-produces more plausible distributions as compared to the E2SFCA method,
-as more DAs have either medium to high accessibilities or extremely low
-accessibilities. In contrast, the E2SFCA method results in many
-high-access areas despite congested clinics, as well as low-access areas
-with higher accessibilities than the proposed method despite lower
-capacities and longer travel times. Overall, the proposed methodology
-improves upon existing methods, as it addresses all six of the
-accessibility axioms and does not over-estimate demand. Both the E2SFCA
-method and the proposed method result in low-income areas having the
-highest accessibilities. The sensitivity analysis suggests that
-increased development and increased congestion in the City of Hamilton
-both result in reduced accessibilities, although the model is more
-sensitive to the number of households in comparison to travel times. The
-model can therefore be used to project accessibilities in the future and
-adjust clinic capacities accordingly. However, more work is required to
-calibrate the model to better fit observed data and to include non-auto
-modes of travel.
+Since the 2SFCA was proposed by Luo and Wang (2003), the floating
+catchment area approach has been a popular one for calculating
+place-based accessibility to healthcare services that considers both the
+supply and demand components, and several key innovations have been made
+to FCA methods since. However, FCA methods are still limited in two
+important ways. First, FCA methods do not fully consider aspects of
+travel and choicemaking behaviour. Like many of the other place-based
+accessibility measures, the only behavioural component of FCA methods is
+the impedance function that is used to weight the value of opportunities
+by the distance or travel time required to reach them. Second, FCA
+approaches also tend to assign population demand and levels-of-service
+to facilities or population zones in a fractional manner, using the
+impedance function (and other adjustments) to weight each value within a
+catchment area. Crucially, this use of overlapping catchment areas in
+FCA approaches has been shown to bias results by inflating/deflating
+supply and demand. While the B2SFCA approach proposed by Páez et al.
+(Paez, Higgins, and Vivona 2019) rectifies this, it does so by
+apportioning fractions of populations and levels-of-service through
+adjustments to the impedance function.
 
-reframes the calculation of healthcare accessibilities into tripmaking
-choices. Compared to
+To respond to these issues, this research developed a multinomial logit
+destination choice model for calculating utility-based transportation
+accessibility to primary care physicians. With its basis in random
+utility theory, the MNL model considers several additional aspects that
+define the appeal of clinics in addition to the travel time required to
+reach them, including the number of physicians available at the clinic
+and the level of crowding. The destination choice model also avoids
+multiple-counting as the iterative fitting procedure results in the
+assignment of each patient trip to a single clinic on average.
 
-FCA approaches consider provider-to-population ratios weighted by
-distance or travel time as a measure of accessibility to healthcare. In
-this sense, congestion at clinics is a function of the populations they
-serve within the travel time window defined by the specification of
-impedance. The MNL approach reframes the measurement of health
-accessibility into individual trips to visit primary care physicians,
-the capacity of physicians to see patients, and congestion effects from
-the estimated trips. The iterative fitting procedure results in the
-assignment of
+Comparisons of the MNL approach with 2SFCA and B2SFCA models using data
+for the City of Hamilton suggests that the accessibility patterns
+produced by each method are broadly similar, with the highest
+accessibilities in the central core of the city where many clinics and
+physicians are located. However, further analysis of the distributions,
+correlations, and spatial clustering of accessibility differences
+reveals that the MNL method produces generally higher accessibilities
+throughout much of Hamilton with the greatest differences seen in the
+ring of suburban and rural zones that surround the city. It seems likely
+that these results arise from the MNL model assigning trips based on the
+most proximate clinic for these residents while more urban residents are
+being drawn to more urban clinics. In contrast, the FCA approaches
+assign population values to all clinics within their catchment area and
+all population zones share the levels-of-service of accessible clinics,
+likely leading to higher demand and lower available supply at these
+rural and suburban clinics.
+
+For planning and policy, our analysis suggests that both the B2SFCA and
+MNL approaches offer merit. While the 2SFCA is generally straightforward
+to calculate with limited data requirements, it has been shown to return
+biased results as a consequence of double counting that makes the
+interpretation of provider-to-population ratios and accessibility scores
+problematic. The B2SFCA, on the other hand, requires the same data as
+the 2SFCA method but improves on it by preserving the population being
+serviced and the level of service. Both the levels-of-service and
+accessibilities calculated in the B2SFCA method are readily
+interpretable as population-to-provider ratios. However, the only travel
+behaviour component in both the 2SFCA and B2SFCA approaches is the
+impedance function. While it does tend to result in the greatest weight
+placed on the nearest locations in practice, particularly after the
+adjustments made in the B2SFCA, it still results in a spreading or
+smoothing of demand and supply. In contrast, the MNL model's
+utility-based approach has a stronger behavioral foundation and
+considers more aspects that define the appeal of particular clinics. It
+also appears to produce what are arguably more realistic results in
+suburban and rural areas. However, the MNL approach is more data-hungry
+and required several parameter assumptions to be made on the part of the
+research team. Further research can ascertain the sensitivity of the
+results to these assumptions. Moreover, the accessibility scores have no
+direct healthcare interpretation.
+
+All methods in our comparative study are limited due to the imposition
+of boundary effects that likely over-estimate levels-of-service at the
+edges of the city and the consideration of only car travel. Moreover, we
+only focus on the spatial component of accessibility and do not consider
+the aspatial components that also play a significant role in defining an
+individual's potential to reach and utilize healthcare services (Joseph
+and Bantock 1982). In this regard, future research should utilize the
+B2SFCA and MNL approaches for welfare analysis to measure place- and
+utility-based accessibility to primary healthcare services for different
+socioeconomic, demographic, and mobility profiles.
+
+\hypertarget{author-contributions}{%
+\section{Author Contributions}\label{author-contributions}}
+
+The authors confirm contribution to the paper as follows: study
+conception and design: X. Author, Y. Author; data collection: Y. Author;
+analysis and interpretation of results: X. Author, Y. Author. Z. Author;
+draft manuscript preparation: Y. Author. Z. Author. All authors reviewed
+the results and approved the final version of the manuscript.
 
 \hypertarget{references}{%
 \section*{References}\label{references}}
@@ -722,6 +775,12 @@ Paez, Antonio, Christopher D. Higgins, and Salvatore F. Vivona. 2019.
 (FCA) Methods.''} Edited by Tayyab Ikram Shah. \emph{PLOS ONE} 14 (6):
 e0218773. \url{https://doi.org/10.1371/journal.pone.0218773}.
 
+\leavevmode\hypertarget{ref-pereira2021}{}%
+Pereira, Rafael H. M., Marcus Saraiva, Daniel Herszenhut, Carlos Kaue
+Vieira Braga, and Matthew Wigginton Conway. 2021. {``R5r: Rapid
+Realistic Routing on Multimodal Transport Networks with R5 in R.''}
+\emph{Findings}, March. \url{https://doi.org/10.32866/001c.21262}.
+
 \leavevmode\hypertarget{ref-radke2000}{}%
 Radke, John, and Lan Mu. 2000. {``Spatial Decompositions, Modeling and
 Mapping Service Regions to Predict Access to Social Programs.''}
@@ -741,7 +800,7 @@ Science} 26 (6): 1073--89.
 
 \end{CSLReferences}
 
-\bibliographystyle{unsrt}
+\bibliographystyle{unsrtnat}
 \bibliography{references.bib}
 
 
