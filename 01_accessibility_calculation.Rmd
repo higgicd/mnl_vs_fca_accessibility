@@ -8,6 +8,7 @@ library(magrittr)
 library(sf)
 library(tidyverse)
 library(tmap)
+library(dplyr)
 
 # options
 tmap_mode("plot")
@@ -154,163 +155,175 @@ plot(doctors$fca_ppr, doctors$bfca_ppr)
 # OLD CODE FROM MARIA's THESIS
 
 ```{r load data}
-#traveltimes <- read.csv("./data/Hamilton Travel Times.csv")
 # use updated travel time matrix
 Hamiltontimes <- ttm %>% 
   mutate(travel_time = as.double(travel_time)) %>%
   pivot_wider(id_cols = fromId, names_from = toId, names_prefix = "X", 
               values_from = travel_time, values_fill = 999) %>%
-  rename(DAUID = fromId) %>%
-  semi_join(data_da_2016_poly %>% transmute(DAUID = GeoUID, Households) %>% filter(Households > 0))
+  rename(GeoUID = fromId) %>%
+  semi_join(data_da_2016_poly %>% transmute(GeoUID, Households) %>% filter(Households > 0))
 
-#population <- read.csv("./data/DA Populations.csv") # unused
-#doctors <- read.csv("./data/HamiltonDoctors.csv")
-#Ham_households <- read.csv("./data/Hamilton Households.csv")
 Ham_households <- data_da_2016_poly %>% 
   st_drop_geometry() %>% 
-  transmute(DAUID = GeoUID, Data = Households)
+  transmute(GeoUID,Data = Households) %>%
+  semi_join(Hamiltontimes,"GeoUID")
 ```
 
 ```{r prepare data}
-#Hamiltontimes <- semi_join(traveltimes, population, by="DAUID") %>% select(-1)
-#population <- semi_join(population, Hamiltontimes, by="DAUID")
-#doctors <- select(doctors,-1)
+#arrange matrices by ID numbers
+Ham_households <- arrange(Ham_households,GeoUID)
+
+doctors <- select(doctors,-1) %>%
+  arrange(doctor_id)
+
+Hamiltontimes <- arrange(Hamiltontimes,GeoUID)
 ```
 
 ## Maria's New Model
 
 ```{r newmodel}
+# Initialize model parameters
 alpha = 0.065
 omega = 22
-#Ham_households <- read.csv("Hamilton Households.csv")
-#traveltimes <- read.csv("OD Matrix.csv")
-#Hamiltontimes <- semi_join(traveltimes,Ham_households,by="DAUID")
-#Ham_households <- semi_join(Ham_households,Hamiltontimes,by="DAUID")
-
 H_tot <- sum(Ham_households$Data)
-Zj <- read.csv("./data/HamiltonDoctors.csv")
-Zj <- select(Zj,-1)
-ID <- Zj$OBJECTID + 1
-ID[181] <- 1
-ID <- sort(ID)
-#Hamiltontimes <- Hamiltontimes[,ID] # extra column removed initially
-Z_tot <- sum(Zj$Sum_count)
+Z_tot <- sum(doctors$doctor_count)
 R_bar <- (alpha*H_tot)/(omega*Z_tot)
 beta1 <- -0.05
 betak2 <- 1
 betak3 <- -0.5
-DAUID <- Hamiltontimes$DAUID
-OBJECTID <- Zj$OBJECTID
-Rj <- data.frame(OBJECTID)
-Rj$Ratios <- R_bar
-Tij <- Hamiltontimes
-expo <- Hamiltontimes
-constant <- Hamiltontimes
-sums <- data.frame(DAUID)
+GeoUID <- Hamiltontimes$GeoUID
+doctor_id <- doctors$doctor_id
 
-calexpo <- function(expo,constant){
-  for(j in 2:length(constant)){
-    for(i in constant$DAUID){
-      constant[constant$DAUID==i, j] <- Hamiltontimes[Hamiltontimes$DAUID==i,j]*beta1 + betak2*log10(omega*Zj$Sum_count[j-1])+betak3*Rj$Ratios[j-1]
-      expo[expo$DAUID==i,j] <- exp(constant[constant$DAUID==i,j])
-    }
-  }
-  return(expo)
+Rj <- data.frame(doctor_id) %>%
+  mutate(Ratio = R_bar) #initialize Rj values as equal to average demand to capacity ratio for all DAs
+
+Tij <- Hamiltontimes #set up data frame for trip distributions for each clinic and DA
+
+expo <- Hamiltontimes #set up data frame for calculating exponent term for each clinic and DA
+
+sums <- data.frame(GeoUID) #set up data frame to store sums of exponent term
+
+# Set up functions for calculating trip distributions
+calexpo <- function(expo, Rj)
+  {
+  expo[,2:181] <- beta1*Hamiltontimes[,2:181]
+  
+  attractiveness <- betak2*log10(omega*doctors$doctor_count) + betak3*Rj$Ratio
+  
+  attractiveness <- t(attractiveness)
+  
+  attractiveness <- attractiveness[col(expo[,2:181])]
+  
+  attractiveness <- matrix(attractiveness,nrow=nrow(Hamiltontimes),ncol=ncol(Hamiltontimes)-1)
+
+  expo[,2:181] <- expo[,2:181] + attractiveness 
+  
+  expo[,2:181] <- exp(expo[,2:181])
+  
+    return(expo)
 }
-expo <- calexpo(expo,constant)
 
-sums$Sum <- apply(expo[,2:181],1,sum)
+expo <- calexpo(expo,Rj) #calculate exponent term for all DAs and clinics
 
-calTij <- function(expo,sums,Tij){
-  for(i in Tij$DAUID){
-    Tij[Tij$DAUID==i,2:181] <- (alpha*Ham_households$Data[Ham_households$DAUID==i]*expo[expo$DAUID==i,2:181])/sums$Sum[sums$DAUID==i]
-  }
+sums$Sum <- apply(expo[,2:181],1,sum) #sum each row in exponent matrix
+
+calTij <- function(expo,sums,Tij) #set up function to calculate trip distributions for each clinic and DA
+  {
+  Tij[,2:181] <- ((alpha*Ham_households$Data/sums$Sum)*diag(nrow(Hamiltontimes))) %*%
+    as.matrix(expo[,2:181])
+  
   return(Tij)
 }
 
-Tij <- calTij(expo,sums,Tij)
+Tij <- calTij(expo,sums,Tij) #calculate initial trip distribution for all clinics and DAs
 ```
 
 ## New Model with New Rj
 
 ```{r new rj}
-rj <- data.frame(OBJECTID)
-Rj_new <- data.frame(OBJECTID)
-convergence <- data.frame(OBJECTID)
-converged <- data.frame(OBJECTID)
-epsilon <- 0.01
-max_iteration <- 10
-iteration <- 1
-sums <- data.frame(DAUID)
-for(j in 2:length(Tij)){
-  rj$Ratios[j-1] <- sum(Tij[,j])/(omega*Zj$Sum_count[j-1])
-  Rj_new$Ratios[j-1] <- (Rj$Ratios[j-1]+rj$Ratios[j-1])/2
-  convergence$Value[j-1] <- abs(Rj_new$Ratios[j-1]-Rj$Ratios[j-1])/Rj$Ratios[j-1]
-}
+#Initialize model parameters
+rj <- data.frame(doctor_id)
 
-converged$Value <- !(convergence$Value > epsilon)
-Rj <- Rj_new
-while(!all(converged$Value)){
+Rj_new <- data.frame(doctor_id)
+
+convergence <- data.frame(doctor_id)
+
+converged <- data.frame(doctor_id)
+
+epsilon <- 0.01
+
+max_iteration <- 10
+
+iteration <- 1
+
+sums <- data.frame(GeoUID)
+
+#Update Rj values with trip distribution
+rj <- rj %>%
+  mutate(Ratio = apply(Tij[,2:181],2,sum)/(omega*doctors$doctor_count))
+
+Rj_new <- Rj_new %>%
+  mutate(Ratio = (Rj$Ratio + rj$Ratio)/2)
+
+convergence <- convergence %>%
+  mutate(Value = abs((Rj_new$Ratio - Rj$Ratio))/Rj$Ratio)
+
+converged <- converged %>%
+  mutate(Value = !(convergence$Value > epsilon)) #check if convergence value is less than or equal to epsilon
+
+Rj <- Rj_new #assign updated ratios to previous ratios
+
+#Iteratively calculate Rj values until they converge
+while(!all(converged$Value)) #run loop until all clinics have converged to within epsilon
+{
   iteration = iteration + 1
-  if(iteration == max_iteration){
+  
+  if(iteration == max_iteration) #stop loop if reached max number of iterations
+  {
     break
   }
   
-  else{
-    expo <- calexpo(expo,constant)
-    sums$Sum <- apply(expo[,2:181],1,sum)
-    Tij <- calTij(expo,sums,Tij)
+  else
+  {
+    expo <- calexpo(expo, Rj) #calculate exponent terms
     
-    for(m in 2:length(Tij)){
-      rj$Ratios[m-1] <- sum(Tij[,m])/(omega*Zj$Sum_count[m-1])
-      Rj_new$Ratios[m-1] <- (Rj$Ratios[m-1]+rj$Ratios[m-1])/2
-      convergence$Value[m-1] <- abs(Rj_new$Ratios[m-1]-Rj$Ratios[m-1])/Rj$Ratios[m-1]
-    }
+    sums$Sum <- apply(expo[,2:181],1,sum) #calculate sums of exponent terms
     
-    converged$Value <- !(convergence$Value > epsilon)
-    Rj <- Rj_new
+    Tij <- calTij(expo,sums,Tij) #calculate trip distribution for this iteration
+    
+    #update ratios with new trip distribution
+    rj <- rj %>%
+      mutate(Ratio = apply(Tij[,2:181],2,sum)/(omega*doctors$doctor_count))
+    
+    Rj_new <- Rj_new %>%
+      mutate(Ratio = (Rj$Ratio + rj$Ratio)/2)
+    
+    convergence <- convergence %>%
+      mutate(Value = abs((Rj_new$Ratio - Rj$Ratio))/Rj$Ratio)
+  
+    converged <- converged %>%
+      mutate(Value = !(convergence$Value > epsilon)) #check if ratios have converged
+    
+    Rj <- Rj_new #assign updated ratios to previous ratios
   }
 }
-expo <- calexpo(expo,constant)
-sums$Sum <- apply(expo[,2:181],1,sum)
-Tij <- calTij(expo,sums,Tij)
+
+expo <- calexpo(expo, Rj) #calculate final exponent terms
+
+sums$Sum <- apply(expo[,2:181],1,sum) #calculate final sums of exponent terms
+
+Tij <- calTij(expo,sums,Tij) #update trip distribution after final iteration
 ```
 
 ## New Accessibilities
 
 ```{r}
-alpha = 0.065
-omega = 22
-#Ham_households <- read.csv("Hamilton Households.csv")
-#traveltimes <- read.csv("OD Matrix.csv")
-#Hamiltontimes <- semi_join(traveltimes,Ham_households,by="DAUID")
-#Ham_households <- semi_join(Ham_households,Hamiltontimes,by="DAUID")
-Zj <- read.csv("./data/HamiltonDoctors.csv")
-Zj <- select(Zj,-1)
-ID <- Zj$OBJECTID + 1
-ID[181] <- 1
-ID <- sort(ID)
-#Hamiltontimes <- Hamiltontimes[,ID]
-beta1 <- -0.05
-betak2 <- 1
-betak3 <- -0.5
-#Rj <- read.csv("Rj Values.csv") # sub-in Rj_new from earlier
-DAUID <- Hamiltontimes$DAUID
-ai <- data.frame(DAUID)
-expo <- Hamiltontimes
-constant <- Hamiltontimes
-sums <- data.frame(DAUID)
-for(j in 2:length(constant)){
-  for(i in constant$DAUID){
-    constant[constant$DAUID==i, j] <- Hamiltontimes[Hamiltontimes$DAUID==i,j]*beta1 + betak2*log10(omega*Zj$Sum_count[j-1])+betak3*Rj$Ratios[j-1]
-    expo[expo$DAUID==i,j] <- exp(constant[constant$DAUID==i,j])
-  }
-}
-sums$Sum <- apply(expo[,2:181],1,sum)
-for(k in ai$DAUID)
-{
-  ai$Value[ai$DAUID==k] <- log10(sums$Sum[sums$DAUID==k])
-  }
+#Initialize model parameters
+ai <- data.frame(GeoUID)
+
+#Calculate accessibilities for each DA
+ai <- ai %>%
+  mutate(Accessibility = log10(sums$Sum))
 ```
 
 # Compare Results
@@ -318,10 +331,10 @@ for(k in ai$DAUID)
 ```{r merge}
 data_da_2016_poly %<>% 
   left_join(ai %>% 
-              transmute(GeoUID = as.character(DAUID), mnl_access = Value), 
+              transmute(GeoUID, mnl_access = Accessibility), 
             by = "GeoUID")
 
-doctors %<>% left_join(Rj_new %>% transmute(doctor_id = OBJECTID, mnl_dcr = Ratios), by = "doctor_id")
+doctors %<>% left_join(Rj_new %>% transmute(doctor_id, mnl_dcr = Ratio), by = "doctor_id")
 ```
 
 ```{r plot}
