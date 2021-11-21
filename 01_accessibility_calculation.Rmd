@@ -152,7 +152,7 @@ tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) +
 plot(doctors$fca_ppr, doctors$bfca_ppr)
 ```
 
-# OLD CODE FROM MARIA's THESIS
+# MNL Model
 
 ```{r load data}
 # use updated travel time matrix
@@ -179,9 +179,7 @@ doctors <- select(doctors,-1) %>%
 Hamiltontimes <- arrange(Hamiltontimes,GeoUID)
 ```
 
-## Maria's New Model
-
-```{r newmodel}
+```{r mnl model step 1}
 # Initialize model parameters
 alpha = 0.065
 omega = 22
@@ -194,14 +192,18 @@ betak3 <- -0.5
 GeoUID <- Hamiltontimes$GeoUID
 doctor_id <- doctors$doctor_id
 
+# initialize Rj values as equal to average demand to capacity ratio for all DAs
 Rj <- data.frame(doctor_id) %>%
-  mutate(Ratio = R_bar) #initialize Rj values as equal to average demand to capacity ratio for all DAs
+  mutate(Ratio = R_bar) 
 
-Tij <- Hamiltontimes #set up data frame for trip distributions for each clinic and DA
+#set up data frame for trip distributions for each clinic and DA
+Tij <- Hamiltontimes 
 
-expo <- Hamiltontimes #set up data frame for calculating exponent term for each clinic and DA
+# set up data frame for calculating exponent term for each clinic and DA
+expo <- Hamiltontimes 
 
-sums <- data.frame(GeoUID) #set up data frame to store sums of exponent term
+# set up data frame to store sums of exponent term
+sums <- data.frame(GeoUID) 
 
 # Set up functions for calculating trip distributions
 calexpo <- function(expo, Rj)
@@ -223,11 +225,8 @@ calexpo <- function(expo, Rj)
     return(expo)
 }
 
-expo <- calexpo(expo,Rj) #calculate exponent term for all DAs and clinics
-
-sums$Sum <- apply(expo[,2:181],1,sum) #sum each row in exponent matrix
-
-calTij <- function(expo,sums,Tij) #set up function to calculate trip distributions for each clinic and DA
+# set up function to calculate trip distributions for each clinic and DA
+calTij <- function(expo,sums,Tij) 
   {
   Tij[,2:181] <- ((alpha*Ham_households$Data/sums$Sum)*diag(nrow(Hamiltontimes))) %*%
     as.matrix(expo[,2:181])
@@ -235,12 +234,17 @@ calTij <- function(expo,sums,Tij) #set up function to calculate trip distributio
   return(Tij)
 }
 
-Tij <- calTij(expo,sums,Tij) #calculate initial trip distribution for all clinics and DAs
+#calculate exponent term for all DAs and clinics
+expo <- calexpo(expo,Rj) 
+
+# sum each row in exponent matrix
+sums$Sum <- apply(expo[,2:181],1,sum) 
+
+# calculate initial trip distribution for all clinics and DAs
+Tij <- calTij(expo,sums,Tij) 
 ```
 
-## New Model with New Rj
-
-```{r new rj}
+```{r mnl model step 2 new rj}
 #Initialize model parameters
 rj <- data.frame(doctor_id)
 
@@ -258,7 +262,7 @@ iteration <- 1
 
 sums <- data.frame(GeoUID)
 
-#Update Rj values with trip distribution
+# Update Rj values with trip distribution
 rj <- rj %>%
   mutate(Ratio = apply(Tij[,2:181],2,sum)/(omega*doctors$doctor_count))
 
@@ -268,12 +272,14 @@ Rj_new <- Rj_new %>%
 convergence <- convergence %>%
   mutate(Value = abs((Rj_new$Ratio - Rj$Ratio))/Rj$Ratio)
 
+# check if convergence value is less than or equal to epsilon
 converged <- converged %>%
-  mutate(Value = !(convergence$Value > epsilon)) #check if convergence value is less than or equal to epsilon
+  mutate(Value = !(convergence$Value > epsilon)) 
 
-Rj <- Rj_new #assign updated ratios to previous ratios
+# assign updated ratios to previous ratios
+Rj <- Rj_new 
 
-#Iteratively calculate Rj values until they converge
+# Iteratively calculate Rj values until they converge
 while(!all(converged$Value)) #run loop until all clinics have converged to within epsilon
 {
   iteration = iteration + 1
@@ -308,14 +314,17 @@ while(!all(converged$Value)) #run loop until all clinics have converged to withi
   }
 }
 
-expo <- calexpo(expo, Rj) #calculate final exponent terms
+# calculate final exponent terms
+expo <- calexpo(expo, Rj) 
 
-sums$Sum <- apply(expo[,2:181],1,sum) #calculate final sums of exponent terms
+# calculate final sums of exponent terms
+sums$Sum <- apply(expo[,2:181],1,sum) 
 
-Tij <- calTij(expo,sums,Tij) #update trip distribution after final iteration
+# update trip distribution after final iteration
+Tij <- calTij(expo,sums,Tij) 
 ```
 
-## New Accessibilities
+## MNL Accessibilities
 
 ```{r}
 #Initialize model parameters
