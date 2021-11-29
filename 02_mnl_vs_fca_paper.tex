@@ -2,7 +2,7 @@
 %%% Begin My package additions %%%%%%%%%%%%%%%%%%%
 \usepackage[hyphens]{url}
 
-  \journal{Wellbeing, Space and Society} % Sets Journal name
+  \journal{Journal of Transport Geography} % Sets Journal name
 
 
 \usepackage{lineno} % add
@@ -174,17 +174,18 @@ healthcare at service locations from population zones and then allocates
 the level of service back to the population zones using a binary measure
 of travel impedance.
 
-Since then, various improvements have been made to the 2SFCA approach to
-better capture the friction of distance. The original 2SFCA has been
-criticized for over-estimating demand and under-estimating levels of
-service in the estimation of accessibilities due to the
-multiple-counting of populations that arises from the overlapping
-catchments in a study area. In response, researchers have proposed
-solutions such as the Three-step Floating Catchment Area (3SFCA) (Wan et
-al., 2012), Modified 2SFCA (M2SFCA) (Delamater, 2013), and Balanced
-2SFCA (B2SFCA) (Paez et al., 2019) methods. Of these, the B2SFCA is the
-only approach that preserves the original population and resulting
-levels of service in calculating floating catchment accessibilities.
+Since then, various improvements have been made to the 2SFCA approach
+including adjustments to better capture the friction of distance
+(Apparicio et al., 2017). The original 2SFCA has also been criticized
+for over-estimating demand and under-estimating levels of service in the
+estimation of accessibilities due to the multiple-counting of
+populations that arises from the overlapping catchments in a study area.
+In response, researchers have proposed solutions such as the Three-step
+Floating Catchment Area (3SFCA) (Wan et al., 2012), Modified 2SFCA
+(M2SFCA) (Delamater, 2013), and Balanced 2SFCA (B2SFCA) (Paez et al.,
+2019) methods. Of these, the B2SFCA is the only approach that preserves
+the original population and resulting levels of service in calculating
+floating catchment accessibilities.
 
 However, despite these innovations, FCA methods remain limited in
 several ways. First, FCA approaches often inflate or deflate demand and
@@ -199,20 +200,35 @@ population is based solely on its distance or travel time from the
 origin zone using the transportation network.
 
 In response, this research utilizes a random utility-based formulation
-for modelling accessibility to healthcare services. In contrast to FCA
-approaches, each patient is, on average, assigned to a single clinic,
-avoiding the issue of double-counting and inflation/deflation of the
-demand and levels-of-service respectively in the 2SFCA methods and the
-assignment of fractional individuals to clinics in the B2SFCA method.
-Beyond travel time, this specification also allows the analyst to
-include additional characteristics of the facilities that affect their
-appeal, such as competition or crowding at the facility. To illustrate
-the potential of the MNL approach, we compare it against the use of the
-2SFCA and B2SFCA, both using a continuous decay function. To facilitate
-open and reproducible research in the spatial sciences (Brunsdon and
-Comber, 2020; Páez, 2021), all data and code for this analysis are
-contained within computational notebooks available at (self-citation;
-.zip for review available anonymously via ).
+for modelling accessibility to healthcare services. Utility-based
+measures of access are flexible and allow the analyst to include any
+information that corresponds to the expected value or attractiveness of
+travel alternatives. While commonly used in alternatives appraisals for
+transport infrastructure (de Jong et al., 2007), utility-based measures
+of accessibility have not been as widely applied to capture other types
+of access. However, they appear to be gaining some traction with recent
+applications considering transit accessibility (Nassir et al., 2016),
+first/last mile access to transit (Hasnine et al., 2019), regional
+accessibility by income class (Jang and Lee, 2020), and accessibility to
+parks (Macfarlane et al., 2020). To the best of our knowledge,
+utility-based methods have not yet been applied to the problem of
+healthcare access. In contrast to FCA approaches, each patient is, on
+average, assigned to a single clinic, avoiding the issue of
+double-counting and inflation/deflation of the demand and
+levels-of-service respectively in the 2SFCA methods and the assignment
+of fractional individuals to clinics in the B2SFCA method. Beyond travel
+time, this specification also allows the analyst to include additional
+characteristics of the facilities that affect their appeal, such as
+competition or crowding at the facility.
+
+To illustrate the potential of the MNL approach, we compare it against
+the use of the 2SFCA and B2SFCA, both using a continuous decay function.
+To facilitate open and reproducible research in the spatial sciences
+(Brunsdon and Comber, 2020; Páez, 2021), all data and code for this
+analysis are contained within computational notebooks available at
+(self-citation; .zip of files for review available anonymously via
+Google Drive
+\href{https://drive.google.com/file/d/1d66npiqIrawCU8DgNrYcztRJef80f7pd/view?usp=sharing}{link}).
 
 \hypertarget{methodology}{%
 \section{Methodology}\label{methodology}}
@@ -784,6 +800,14 @@ multinomial logit and gravity models. Transportation Research Part B:
 Methodological 17, 13--23.
 doi:\href{https://doi.org/10.1016/0191-2615(83)90023-1}{10.1016/0191-2615(83)90023-1}
 
+\leavevmode\hypertarget{ref-apparicio2017}{}%
+Apparicio, P., Gelb, J., Dubé, A.-S., Kingham, S., Gauvin, L.,
+Robitaille, É., 2017. The approaches to measuring the potential spatial
+access to urban health services revisited: distance types and
+aggregation-error issues. International Journal of Health Geographics
+16.
+doi:\href{https://doi.org/10.1186/s12942-017-0105-9}{10.1186/s12942-017-0105-9}
+
 \leavevmode\hypertarget{ref-bauer2016}{}%
 Bauer, J., Groneberg, D.A., 2016. Measuring Spatial Accessibility of
 Health Care Providers {{}} Introduction of a Variable Distance Decay
@@ -807,6 +831,12 @@ access to health care facilities, and late-stage breast cancer diagnosis
 in metropolitan Detroit. Health \& Place 16, 1038--1052.
 doi:\href{https://doi.org/10.1016/j.healthplace.2010.06.012}{10.1016/j.healthplace.2010.06.012}
 
+\leavevmode\hypertarget{ref-dejong2007}{}%
+de Jong, G., Daly, A., Pieters, M., van der Hoorn, T., 2007. The logsum
+as an evaluation measure: Review of the literature and new results.
+Transportation Research Part A: Policy and Practice 41, 874--889.
+doi:\href{https://doi.org/10.1016/j.tra.2006.10.002}{10.1016/j.tra.2006.10.002}
+
 \leavevmode\hypertarget{ref-delamater2013}{}%
 Delamater, P.L., 2013. Spatial accessibility in suboptimally configured
 health care systems: A modified two-step floating catchment area
@@ -823,6 +853,19 @@ doi:\href{https://doi.org/10.1016/j.jtrangeo.2003.10.005}{10.1016/j.jtrangeo.200
 Hansen, W.G., 1959. How Accessibility Shapes Land Use. Journal of the
 American Institute of Planners 25, 73--76.
 doi:\href{https://doi.org/10.1080/01944365908978307}{10.1080/01944365908978307}
+
+\leavevmode\hypertarget{ref-hasnine2019}{}%
+Hasnine, M.S., Graovac, A., Camargo, F., Habib, K.N., 2019. A random
+utility maximization (RUM) based measure of accessibility to transit:
+Accurate capturing of the first-mile issue in urban transit. Journal of
+Transport Geography 74, 313--320.
+doi:\href{https://doi.org/10.1016/j.jtrangeo.2018.12.007}{10.1016/j.jtrangeo.2018.12.007}
+
+\leavevmode\hypertarget{ref-jang2020}{}%
+Jang, S., Lee, S., 2020. Study of the regional accessibility calculation
+by income class based on utility-based accessibility. Journal of
+Transport Geography 84, 102697.
+doi:\href{https://doi.org/10.1016/j.jtrangeo.2020.102697}{10.1016/j.jtrangeo.2020.102697}
 
 \leavevmode\hypertarget{ref-joseph1982}{}%
 Joseph, A.E., Bantock, P.R., 1982. Measuring potential physical
@@ -842,11 +885,25 @@ Care in a GIS Environment: Synthesis and a Case Study in the Chicago
 Region. Environment and Planning B: Planning and Design 30, 865--884.
 doi:\href{https://doi.org/10.1068/b29120}{10.1068/b29120}
 
+\leavevmode\hypertarget{ref-macfarlane2020}{}%
+Macfarlane, G.S., Boyd, N., Taylor, J.E., Watkins, K., 2020. Modeling
+the impacts of park access on health outcomes: A utility-based
+accessibility approach. Environment and Planning B: Urban Analytics and
+City Science 48, 2289--2306.
+doi:\href{https://doi.org/10.1177/2399808320974027}{10.1177/2399808320974027}
+
 \leavevmode\hypertarget{ref-mcgrail2009}{}%
 McGrail, M.R., Humphreys, J.S., 2009. Measuring spatial accessibility to
 primary care in rural areas: Improving the effectiveness of the two-step
 floating catchment area method. Applied Geography 29, 533--541.
 doi:\href{https://doi.org/10.1016/j.apgeog.2008.12.003}{10.1016/j.apgeog.2008.12.003}
+
+\leavevmode\hypertarget{ref-nassir2016}{}%
+Nassir, N., Hickman, M., Malekzadeh, A., Irannezhad, E., 2016. A
+utility-based travel impedance measure for public transit network
+accessibility. Transportation Research Part A: Policy and Practice 88,
+26--39.
+doi:\href{https://doi.org/10.1016/j.tra.2016.03.007}{10.1016/j.tra.2016.03.007}
 
 \leavevmode\hypertarget{ref-paez2019}{}%
 Paez, A., Higgins, C.D., Vivona, S.F., 2019. Demand and level of service

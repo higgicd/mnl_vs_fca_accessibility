@@ -1,0 +1,129 @@
+\documentclass[]{elsarticle} %review=doublespace preprint=single 5p=2 column
+%%% Begin My package additions %%%%%%%%%%%%%%%%%%%
+\usepackage[hyphens]{url}
+
+  \journal{Journal of Transport Geography} % Sets Journal name
+
+
+\usepackage{lineno} % add
+  \linenumbers % turns line numbering on
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+\usepackage{graphicx}
+%%%%%%%%%%%%%%%% end my additions to header
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \usepackage{fontspec}
+  \ifxetex
+    \usepackage{xltxtra,xunicode}
+  \fi
+  \defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
+  \newcommand{\euro}{€}
+\fi
+% use microtype if available
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\bibliographystyle{elsarticle-harv}
+\ifxetex
+  \usepackage[setpagesize=false, % page size defined by xetex
+              unicode=false, % unicode breaks when used with xetex
+              xetex]{hyperref}
+\else
+  \usepackage[unicode=true]{hyperref}
+\fi
+\hypersetup{breaklinks=true,
+            bookmarks=true,
+            pdfauthor={},
+            pdftitle={Accessibility to Primary Care Physicians: Comparing Floating Catchments with a Utility-based Approach},
+            colorlinks=false,
+            urlcolor=blue,
+            linkcolor=magenta,
+            pdfborder={0 0 0}}
+\urlstyle{same}  % don't use monospace font for urls
+
+\setcounter{secnumdepth}{0}
+% Pandoc toggle for numbering sections (defaults to be off)
+\setcounter{secnumdepth}{0}
+
+% Pandoc citation processing
+
+% Pandoc header
+
+
+
+\begin{document}
+\begin{frontmatter}
+
+  \title{Accessibility to Primary Care Physicians: Comparing Floating
+Catchments with a Utility-based Approach}
+    \author[Some University]{Author One}
+   \ead{Some Email} 
+    \author[Some University]{Author One\corref{1}}
+   \ead{Some Email} 
+    \author[Some University]{Author One}
+   \ead{Some Email} 
+    \author[Some University]{Author One}
+   \ead{Some Email} 
+      \address[Some University]{Address}
+      \cortext[1]{Corresponding Author}
+  
+  \begin{abstract}
+  Floating Catchment Area (FCA) methods are a popular choice for
+  modelling accessibility to healthcare services because of their
+  ability to consider both supply and demand. However, FCA methods do
+  not fully consider aspects of travel and choicemaking behaviour as the
+  only behavioural component is the impedance function. FCA approaches
+  also tend to assign population demand to clinics and levels-of-service
+  to population zones in an overlapping manner that has been shown to
+  bias results by inflating/deflating supply and demand. While the
+  adjustments proposed in the recent ``Balanced FCA'' method can rectify
+  this, it apportions population and levels of service in a fractional
+  manner. In response, this research proposes a utility-based measure of
+  healthcare accessibility based on a multinomial logit (MNL)
+  destination choice model that avoids the multiple-counting issue in
+  FCA methods and considers several additional behavioural aspects that
+  define the appeal of clinics in addition to the travel time required
+  to reach them, including their capacity and level of crowding.
+  Comparisons of the MNL approach with the original and balanced FCA
+  models using data for the City of Hamilton, Canada, suggests that
+  while the accessibility patterns produced by each method are broadly
+  similar, some key differences exist in the calculated accessibilities
+  and their spatial patterns. The MNL model in particular estimates
+  higher accessibilities in suburban and rural areas. Based on these
+  findings, we argue that both the Balanced FCA and MNL approaches offer
+  merit for planning and policy.
+  \end{abstract}
+   \begin{keyword} healthcare accessibility place-based
+accessibility utility-based accessibility destination choice
+model accessibility analysis\end{keyword}
+ \end{frontmatter}
+
+\hypertarget{highlights}{%
+\section{Highlights}\label{highlights}}
+
+\begin{itemize}
+\tightlist
+\item
+  Develops a multinomial logit based method for healthcare accessibility
+\item
+  Compares floating catchment-based with utility-based accessibility
+\item
+  Balanced floating catchment method corrects for inflation of supply
+  and demand
+\item
+  Utility-based approach accounts for more aspects of travel behaviour
+\item
+  Each method has merit for health planning and policy
+\end{itemize}
+
+
+\end{document}

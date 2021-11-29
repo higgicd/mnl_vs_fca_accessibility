@@ -28,7 +28,7 @@ keywords:
   - utility-based accessibility
   - destination choice model
   - accessibility analysis
-journal: "Wellbeing, Space and Society"
+journal: "Journal of Transport Geography"
 date: "`r Sys.Date()`"
 bibliography: references.bib
 linenumbers: true
@@ -67,11 +67,13 @@ Accessibility to healthcare services is defined by both spatial and aspatial com
 
 In general, four approaches for calculating accessibility exist: infrastructure-based, which focuses on the capacity of transportation infrastructure; location-based, which focuses on spatial distributions of opportunities; person-based, which focuses on accessibility on an individual level; and utility-based, which focuses on the utility derived from interacting with the opportunity or participating in an activity [@geurs2004]. Place-based measures are the most common in the literature and, of these, the family of "floating catchment area" (FCA) methods is one of the most popular approaches for calculating place-based healthcare accessibility. Because healthcare access is sensitive to demand and supply, Luo and Wang [@luo2003] (drawing on Radke and Mu [-@radke2000]) introduced the Two-step Floating Catchment Area (2SFCA) method that first estimates the demand for healthcare at service locations from population zones and then allocates the level of service back to the population zones using a binary measure of travel impedance.
 
-Since then, various improvements have been made to the 2SFCA approach to better capture the friction of distance. The original 2SFCA has been criticized for over-estimating demand and under-estimating levels of service in the estimation of accessibilities due to the multiple-counting of populations that arises from the overlapping catchments in a study area. In response, researchers have proposed solutions such as the Three-step Floating Catchment Area (3SFCA) [@wan2012], Modified 2SFCA (M2SFCA) [@delamater2013], and Balanced 2SFCA (B2SFCA) [@paez2019] methods. Of these, the B2SFCA is the only approach that preserves the original population and resulting levels of service in calculating floating catchment accessibilities.
+Since then, various improvements have been made to the 2SFCA approach including adjustments to better capture the friction of distance [@apparicio2017]. The original 2SFCA has also been criticized for over-estimating demand and under-estimating levels of service in the estimation of accessibilities due to the multiple-counting of populations that arises from the overlapping catchments in a study area. In response, researchers have proposed solutions such as the Three-step Floating Catchment Area (3SFCA) [@wan2012], Modified 2SFCA (M2SFCA) [@delamater2013], and Balanced 2SFCA (B2SFCA) [@paez2019] methods. Of these, the B2SFCA is the only approach that preserves the original population and resulting levels of service in calculating floating catchment accessibilities.
 
 However, despite these innovations, FCA methods remain limited in several ways. First, FCA approaches often inflate or deflate demand and supply in the calculation of healthcare access. While the B2SFCA remedies this, it does so by assigning fractions of populations to clinics and service ratios to population zones. While the parameters of the balanced method sum to the original zonal populations and provider-to-population ratios, this fractional approach does not reflect the ways in which individuals choose to visit facilities. Second, the appeal of any given healthcare facility from the perspective of the population is based solely on its distance or travel time from the origin zone using the transportation network.
 
-In response, this research utilizes a random utility-based formulation for modelling accessibility to healthcare services. In contrast to FCA approaches, each patient is, on average, assigned to a single clinic, avoiding the issue of double-counting and inflation/deflation of the demand and levels-of-service respectively in the 2SFCA methods and the assignment of fractional individuals to clinics in the B2SFCA method. Beyond travel time, this specification also allows the analyst to include additional characteristics of the facilities that affect their appeal, such as competition or crowding at the facility. To illustrate the potential of the MNL approach, we compare it against the use of the 2SFCA and B2SFCA, both using a continuous decay function. To facilitate open and reproducible research in the spatial sciences [@brunsdon2020; @paez2021], all data and code for this analysis are contained within computational notebooks available at (self-citation; .zip for review available anonymously via ).
+In response, this research utilizes a random utility-based formulation for modelling accessibility to healthcare services. Utility-based measures of access are flexible and allow the analyst to include any information that corresponds to the expected value or attractiveness of travel alternatives. While commonly used in alternatives appraisals for transport infrastructure [@dejong2007], utility-based measures of accessibility have not been as widely applied to capture other types of access. However, they appear to be gaining some traction with recent applications considering transit accessibility [@nassir2016], first/last mile access to transit [@hasnine2019], regional accessibility by income class [@jang2020], and accessibility to parks [@macfarlane2020]. To the best of our knowledge, utility-based methods have not yet been applied to the problem of healthcare access. In contrast to FCA approaches, each patient is, on average, assigned to a single clinic, avoiding the issue of double-counting and inflation/deflation of the demand and levels-of-service respectively in the 2SFCA methods and the assignment of fractional individuals to clinics in the B2SFCA method. Beyond travel time, this specification also allows the analyst to include additional characteristics of the facilities that affect their appeal, such as competition or crowding at the facility.
+
+To illustrate the potential of the MNL approach, we compare it against the use of the 2SFCA and B2SFCA, both using a continuous decay function. To facilitate open and reproducible research in the spatial sciences [@brunsdon2020; @paez2021], all data and code for this analysis are contained within computational notebooks available at (self-citation; .zip of files for review available anonymously via Google Drive [link](https://drive.google.com/file/d/1d66npiqIrawCU8DgNrYcztRJef80f7pd/view?usp=sharing)).
 
 # Methodology
 
@@ -108,8 +110,7 @@ However, neither of these approaches fully resolves the issue of demand and supp
 
 $$
 R_j = \frac{S_j}{\sum_i{P_iW_{ij}^{i}}}
-$$ 
-$$
+$$ $$
 W_{ij}^{i} = \frac{W_{ij}}{\sum_j W_{ij}}
 $$
 
@@ -117,8 +118,7 @@ and with column-standardized weights $W_{ij}^{j}$ in the second step:
 
 $$
 A_i = \sum_j{R_jW_{ij}^{j}}
-$$
-$$
+$$ $$
 W_{ij}^{j} = \frac{W_{ij}}{\sum_i W_{ij}}
 $$
 
@@ -158,14 +158,11 @@ Subject to the following constraints:
 
 $$
 \sum_{j \in J}T_{ij} = \alpha H_i \forall i \in I 
-$$ 
-$$
+$$ $$
 \sum_{i \in I} \sum_{j \in J} T_{ij} t_{ij} = \bar{t}T 
-$$ 
-$$
+$$ $$
 \sum_{i \in I} \sum_{j \in J} T_{ij} log(C_j) = \sum_{i \in I} \sum_{j \in J}T_{ij} log \omega Z_j = \bar{C}T 
-$$ 
-$$
+$$ $$
 \sum_{i \in I} \sum_{j \in J} T_{ij} R_j = \bar{R}T
 $$
 
@@ -187,8 +184,7 @@ The service capacities and demand-to-capacity ratios are calculated as follows:
 
 $$
 C_j = \omega Z_j
-$$ 
-$$
+$$ $$
 R_j = \frac{\sum_{i \in I} T_{ij}}{C_j} = \frac{\sum_{i \in I} T_{ij}}{\omega Z_j}
 $$
 
