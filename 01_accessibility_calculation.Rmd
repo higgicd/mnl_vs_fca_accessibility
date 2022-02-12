@@ -335,7 +335,251 @@ ai <- ai %>%
   mutate(Accessibility = log10(sums$Sum))
 ```
 
-# Compare Results
+## Sensitivity Analysis halve betak2
+
+```{r}
+#Initialize new model parameters
+betak2 <- 0.5
+
+# initialize Rj values as equal to average demand to capacity ratio for all DAs
+Rj_k2 <- data.frame(doctor_id) %>%
+  mutate(Ratio = R_bar) 
+
+#set up data frame for trip distributions for each clinic and DA
+Tij_k2 <- Hamiltontimes 
+
+# set up data frame for calculating exponent term for each clinic and DA
+expo_k2 <- Hamiltontimes 
+
+# set up data frame to store sums of exponent term
+sums_k2 <- data.frame(GeoUID) 
+
+#calculate exponent term for all DAs and clinics
+expo_k2 <- calexpo(expo_k2,Rj_k2) 
+
+# sum each row in exponent matrix
+sums_k2$Sum <- apply(expo_k2[,2:181],1,sum) 
+
+# calculate initial trip distribution for all clinics and DAs
+Tij_k2 <- calTij(expo_k2,sums_k2,Tij_k2) 
+
+rj_k2 <- data.frame(doctor_id)
+
+Rj_k2_new <- data.frame(doctor_id)
+
+convergence <- data.frame(doctor_id)
+
+converged <- data.frame(doctor_id)
+
+epsilon <- 0.01
+
+max_iteration <- 10
+
+iteration <- 1
+
+sums_k2 <- data.frame(GeoUID)
+
+# Update Rj values with trip distribution
+rj_k2 <- rj_k2 %>%
+  mutate(Ratio = apply(Tij_k2[,2:181],2,sum)/(omega*doctors$doctor_count))
+
+Rj_k2_new <- Rj_k2_new %>%
+  mutate(Ratio = (Rj_k2$Ratio + rj_k2$Ratio)/2)
+
+convergence <- convergence %>%
+  mutate(Value = abs((Rj_k2_new$Ratio - Rj_k2$Ratio))/Rj_k2$Ratio)
+
+# check if convergence value is less than or equal to epsilon
+converged <- converged %>%
+  mutate(Value = !(convergence$Value > epsilon)) 
+
+# assign updated ratios to previous ratios
+Rj_k2 <- Rj_k2_new 
+
+# Iteratively calculate Rj values until they converge
+while(!all(converged$Value)) #run loop until all clinics have converged to within epsilon
+{
+  iteration = iteration + 1
+  
+  if(iteration == max_iteration) #stop loop if reached max number of iterations
+  {
+    break
+  }
+  
+  else
+  {
+    expo_k2 <- calexpo(expo_k2, Rj_k2) #calculate exponent terms
+    
+    sums_k2$Sum <- apply(expo_k2[,2:181],1,sum) #calculate sums of exponent terms
+    
+    Tij_k2 <- calTij(expo_k2,sums_k2,Tij_k2) #calculate trip distribution for this iteration
+    
+    #update ratios with new trip distribution
+    rj_k2 <- rj_k2 %>%
+      mutate(Ratio = apply(Tij_k2[,2:181],2,sum)/(omega*doctors$doctor_count))
+    
+    Rj_k2_new <- Rj_k2_new %>%
+      mutate(Ratio = (Rj_k2$Ratio + rj_k2$Ratio)/2)
+    
+    convergence <- convergence %>%
+      mutate(Value = abs((Rj_k2_new$Ratio - Rj_k2$Ratio))/Rj_k2$Ratio)
+  
+    converged <- converged %>%
+      mutate(Value = !(convergence$Value > epsilon)) #check if ratios have converged
+    
+    Rj_k2 <- Rj_k2_new #assign updated ratios to previous ratios
+  }
+}
+
+# calculate final exponent terms
+expo_k2 <- calexpo(expo_k2, Rj_k2) 
+
+# calculate final sums of exponent terms
+sums_k2$Sum <- apply(expo_k2[,2:181],1,sum) 
+
+# update trip distribution after final iteration
+Tij_k2 <- calTij(expo_k2,sums_k2,Tij_k2) 
+
+ai_k2 <- data.frame(GeoUID)
+
+#Calculate new accessibilities for each DA
+ai_k2 <- ai_k2 %>%
+  mutate(Accessibility = log10(sums_k2$Sum))
+```
+
+## Sensitivity Analysis double betak3
+
+```{r}
+#Initialize new model parameters
+betak2 <- 1
+betak3 <- -1
+
+# initialize Rj values as equal to average demand to capacity ratio for all DAs
+Rj_k3 <- data.frame(doctor_id) %>%
+  mutate(Ratio = R_bar) 
+
+#set up data frame for trip distributions for each clinic and DA
+Tij_k3 <- Hamiltontimes 
+
+# set up data frame for calculating exponent term for each clinic and DA
+expo_k3 <- Hamiltontimes 
+
+# set up data frame to store sums of exponent term
+sums_k3 <- data.frame(GeoUID) 
+
+#calculate exponent term for all DAs and clinics
+expo_k3 <- calexpo(expo_k3,Rj_k3) 
+
+# sum each row in exponent matrix
+sums_k3$Sum <- apply(expo_k3[,2:181],1,sum) 
+
+# calculate initial trip distribution for all clinics and DAs
+Tij_k3 <- calTij(expo_k3,sums_k3,Tij_k3) 
+
+rj_k3 <- data.frame(doctor_id)
+
+Rj_k3_new <- data.frame(doctor_id)
+
+convergence <- data.frame(doctor_id)
+
+converged <- data.frame(doctor_id)
+
+epsilon <- 0.01
+
+max_iteration <- 10
+
+iteration <- 1
+
+sums_k3 <- data.frame(GeoUID)
+
+# Update Rj values with trip distribution
+rj_k3 <- rj_k3 %>%
+  mutate(Ratio = apply(Tij_k3[,2:181],2,sum)/(omega*doctors$doctor_count))
+
+Rj_k3_new <- Rj_k3_new %>%
+  mutate(Ratio = (Rj_k3$Ratio + rj_k3$Ratio)/2)
+
+convergence <- convergence %>%
+  mutate(Value = abs((Rj_k3_new$Ratio - Rj_k3$Ratio))/Rj_k3$Ratio)
+
+# check if convergence value is less than or equal to epsilon
+converged <- converged %>%
+  mutate(Value = !(convergence$Value > epsilon)) 
+
+# assign updated ratios to previous ratios
+Rj_k3 <- Rj_k3_new 
+
+# Iteratively calculate Rj values until they converge
+while(!all(converged$Value)) #run loop until all clinics have converged to within epsilon
+{
+  iteration = iteration + 1
+  
+  if(iteration == max_iteration) #stop loop if reached max number of iterations
+  {
+    break
+  }
+  
+  else
+  {
+    expo_k3 <- calexpo(expo_k3, Rj_k3) #calculate exponent terms
+    
+    sums_k3$Sum <- apply(expo_k3[,2:181],1,sum) #calculate sums of exponent terms
+    
+    Tij_k3 <- calTij(expo_k3,sums_k3,Tij_k3) #calculate trip distribution for this iteration
+    
+    #update ratios with new trip distribution
+    rj_k3 <- rj_k3 %>%
+      mutate(Ratio = apply(Tij_k3[,2:181],2,sum)/(omega*doctors$doctor_count))
+    
+    Rj_k3_new <- Rj_k3_new %>%
+      mutate(Ratio = (Rj_k3$Ratio + rj_k3$Ratio)/2)
+    
+    convergence <- convergence %>%
+      mutate(Value = abs((Rj_k3_new$Ratio - Rj_k3$Ratio))/Rj_k3$Ratio)
+  
+    converged <- converged %>%
+      mutate(Value = !(convergence$Value > epsilon)) #check if ratios have converged
+    
+    Rj_k3 <- Rj_k3_new #assign updated ratios to previous ratios
+  }
+}
+
+# calculate final exponent terms
+expo_k3 <- calexpo(expo_k3, Rj_k3) 
+
+# calculate final sums of exponent terms
+sums_k3$Sum <- apply(expo_k3[,2:181],1,sum) 
+
+# update trip distribution after final iteration
+Tij_k3 <- calTij(expo_k3,sums_k3,Tij_k3) 
+
+ai_k3 <- data.frame(GeoUID)
+
+#Calculate new accessibilities for each DA
+ai_k3 <- ai_k3 %>%
+  mutate(Accessibility = log10(sums_k3$Sum))
+```
+
+# Compare sensitivity test results
+```{r}
+#results for beta k2
+data_da_2016_poly %<>% 
+  left_join(ai_k2 %>% 
+              transmute(GeoUID, mnl_access_k2 = Accessibility), 
+            by = "GeoUID")
+
+doctors %<>% left_join(Rj_k2_new %>% transmute(doctor_id, mnl_dcr_k2 = Ratio), by = "doctor_id")
+
+#results for beta k3
+data_da_2016_poly %<>% 
+  left_join(ai_k3 %>% 
+              transmute(GeoUID, mnl_access_k3 = Accessibility), 
+            by = "GeoUID")
+
+doctors %<>% left_join(Rj_k3_new %>% transmute(doctor_id, mnl_dcr_k3 = Ratio), by = "doctor_id")
+```
+
+# Compare Results of original analysis
 
 ```{r merge}
 data_da_2016_poly %<>% 
@@ -371,6 +615,18 @@ tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) +
   tm_fill("grey90") +
   tm_shape(data_da_2016_poly) + 
   tm_fill(col = "mnl_access", palette = "viridis", style = "jenks", title = "MNL Accessibility")  +
+  tm_layout(legend.position = c("left","bottom"))
+
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "mnl_access_k2", palette = "viridis", style = "fixed",breaks = c(0,2.110,2.278,2.393,2.469,2.554), title = "Beta k2 Sensitivity Test")  +
+  tm_layout(legend.position = c("left","bottom"))
+
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "mnl_access_k3", palette = "viridis", style = "fixed",breaks = c(0,2.110,2.278,2.393,2.469,2.554), title = "Beta k3 Sensitivity Test")  +
   tm_layout(legend.position = c("left","bottom"))
 
 plot(data_da_2016_poly$fca_access, data_da_2016_poly$mnl_access)
