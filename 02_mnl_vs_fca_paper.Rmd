@@ -44,6 +44,8 @@ library(sf)
 library(spdep)
 library(tidyverse)
 library(tmap)
+library(viridis)
+library(patchwork)
 
 # options
 tmap_mode("plot")
@@ -65,11 +67,11 @@ The global COVID-19 pandemic has emphasized the importance of healthcare accessi
 
 Accessibility to healthcare services is defined by both spatial and aspatial components [@joseph1982]. Aspatial factors include the cost and quality of healthcare services and the socioeconomic, demographic, and mobility profile of potential users [@joseph1982]. The second component considers geographic accessibility, which can be defined as the potential to interact with a given set of opportunities, such as healthcare facilities or primary care physicians, from a given location using the transportation network [@hansen1959]. Accessibility to healthcare can therefore be improved through either an increase in the number of available opportunities or through improvements to the transportation network.
 
-In general, four approaches for calculating accessibility exist: infrastructure-based, which focuses on the capacity of transportation infrastructure; location-based, which focuses on spatial distributions of opportunities; person-based, which focuses on accessibility on an individual level; and utility-based, which focuses on the utility derived from interacting with the opportunity or participating in an activity [@geurs2004]. Place-based measures are the most common in the literature and, of these, the family of "floating catchment area" (FCA) methods is one of the most popular approaches for calculating place-based healthcare accessibility. Because healthcare access is sensitive to demand and supply, Luo and Wang [@luo2003] (drawing on Radke and Mu [-@radke2000]) introduced the Two-step Floating Catchment Area (2SFCA) method that first estimates the demand for healthcare at service locations from population zones and then allocates the level of service back to the population zones using a binary measure of travel impedance.
+In general, four approaches for calculating accessibility exist: infrastructure-based, which focuses on the capacity of transportation infrastructure; location-based, which focuses on spatial distributions of opportunities; person-based, which focuses on accessibility on an individual level; and utility-based, which focuses on the utility derived from interacting with the opportunity or participating in an activity [@geurs2004]. Place-based measures are the most common in the literature and, of these, the family of "floating catchment area" (FCA) methods is one of the most popular approaches for calculating measures of place-based healthcare accessibility that takes the competition for opportunities into account. Because healthcare access is sensitive to demand and supply, Luo and Wang [@luo2003] (drawing on Radke and Mu [-@radke2000]) introduced the Two-step Floating Catchment Area (2SFCA) method that first estimates the demand for healthcare at service locations from population zones and then allocates the level of service back to the population zones using a binary measure of travel impedance.
 
 Since then, various improvements have been made to the 2SFCA approach including adjustments to better capture the friction of distance [@apparicio2017]. The original 2SFCA has also been criticized for over-estimating demand and under-estimating levels of service in the estimation of accessibilities due to the multiple-counting of populations that arises from the overlapping catchments in a study area. In response, researchers have proposed solutions such as the Three-step Floating Catchment Area (3SFCA) [@wan2012], Modified 2SFCA (M2SFCA) [@delamater2013], and Balanced 2SFCA (B2SFCA) [@paez2019] methods. Of these, the B2SFCA is the only approach that preserves the original population and resulting levels of service in calculating floating catchment accessibilities.
 
-However, despite these innovations, FCA methods remain limited in several ways. First, FCA approaches often inflate or deflate demand and supply in the calculation of healthcare access. While the B2SFCA remedies this, it does so by assigning fractions of populations to clinics and service ratios to population zones. While the parameters of the balanced method sum to the original zonal populations and provider-to-population ratios, this fractional approach does not reflect the ways in which individuals choose to visit facilities. Second, the appeal of any given healthcare facility from the perspective of the population is based solely on its distance or travel time from the origin zone using the transportation network.
+However, despite these innovations, FCA methods remain limited in several ways. First, FCA approaches often inflate or deflate demand and supply in the calculation of healthcare access. While the B2SFCA remedies this, it does so by assigning fractions of populations to clinics and service ratios to population zones. Although the parameters of the balanced method sum to the original zonal populations and provider-to-population ratios, this fractional approach does not reflect the ways in which individuals choose to visit facilities. Second, the appeal of any given healthcare facility from the perspective of the population is based solely on its distance or travel time from the origin zone using the transportation network.
 
 In response, this research utilizes a random utility-based formulation for modelling accessibility to healthcare services. Utility-based measures of access are flexible and allow the analyst to include any information that corresponds to the expected value or attractiveness of travel alternatives. While commonly used in alternatives appraisals for transport infrastructure [@dejong2007], utility-based measures of accessibility have not been as widely applied to capture other types of access. However, they appear to be gaining some traction with recent applications considering transit accessibility [@nassir2016], first/last mile access to transit [@hasnine2019], regional accessibility by income class [@jang2020], and accessibility to parks [@macfarlane2020]. To the best of our knowledge, utility-based methods have not yet been applied to the problem of healthcare access. In contrast to FCA approaches, each patient is, on average, assigned to a single clinic, avoiding the issue of double-counting and inflation/deflation of the demand and levels-of-service respectively in the 2SFCA methods and the assignment of fractional individuals to clinics in the B2SFCA method. Beyond travel time, this specification also allows the analyst to include additional characteristics of the facilities that affect their appeal, such as competition or crowding at the facility.
 
@@ -134,10 +136,10 @@ where $\beta$ is a parameter that determines the decay of the function and $t_{i
 
 ## Utility-based Method
 
-To address the limitations of existing methods, a novel methodology for deriving utility-based accessibility is developed which assigns trips from population centres to clinics. The general form of this function is as follows:
+To address the limitations of existing methods, a novel methodology for deriving utility-based accessibility is developed which assigns trips from households in population centres to clinics. The general form of this function is as follows:
 
 $$
-T_{ij} = f(H_i, Z_j, R_j, t_{ij}, \beta)
+T_{ij} = f(H_i, Z_j, D_j, t_{ij}, \beta)
 $$
 
 where:
@@ -145,10 +147,10 @@ where:
 -   $T_{ij}$ is the number of trips from zone $i$ to clinic $j$
 -   $H_i$ is the number of households in zone $i$
 -   $Z_j$ is the number of doctors at clinic $j$
--   $R_j$ is the demand-to-capacity ratio at clinic $j$ (note this is inverted from the physician-to-population ratios used in previous FCA approaches)
+-   $D_j$ is the demand-to-capacity ratio at clinic $j$ (note this is inverted from the physician-to-population ratios used in previous FCA approaches)
 -   $t_{ij}$ is the travel time between zones $i$ and $j$, and $\beta$ is a row vector of parameters to be estimated.
 
-To estimate these parameters, information minimization is used as this approach allows for the least-biased parameter estimation and has been proven to be identical to utility maximization [@anas1983]. Based on information minimization theory, the probability that a household in zone i will visit clinic j can be estimated as follows:
+To estimate these parameters, information minimization is used as this approach allows for the least-biased parameter estimation and has been proven to be identical to utility maximization [@anas1983]. Based on information minimization theory, the probability that a household in zone $i$ will visit clinic $j$ can be estimated as follows:
 
 $$
 MAX_{T_{ij}} E = -\sum_{j \in J} \sum_{i \in I} T_{ij} log(T_{ij})
@@ -158,12 +160,15 @@ Subject to the following constraints:
 
 $$
 \sum_{j \in J}T_{ij} = \alpha H_i \forall i \in I 
-$$ $$
+$$
+$$
 \sum_{i \in I} \sum_{j \in J} T_{ij} t_{ij} = \bar{t}T 
-$$ $$
+$$ 
+$$
 \sum_{i \in I} \sum_{j \in J} T_{ij} log(C_j) = \sum_{i \in I} \sum_{j \in J}T_{ij} log \omega Z_j = \bar{C}T 
-$$ $$
-\sum_{i \in I} \sum_{j \in J} T_{ij} R_j = \bar{R}T
+$$ 
+$$
+\sum_{i \in I} \sum_{j \in J} T_{ij} D_j = \bar{D}T
 $$
 
 where:
@@ -176,7 +181,7 @@ where:
 -   $C_j$ is the nominal service capacity at clinic $j$
 -   $\omega$ is the average number of patients served by a doctor per day
 -   $\bar{C}$ is the average observed nominal service capacity
--   $\bar{R}$ is the average observed demand-to-capacity ratio
+-   $\bar{D}$ is the average observed demand-to-capacity ratio
 -   $H$ is the total number of households
 -   $Z$ is the total number of primary care physicians
 
@@ -184,47 +189,52 @@ The service capacities and demand-to-capacity ratios are calculated as follows:
 
 $$
 C_j = \omega Z_j
-$$ $$
-R_j = \frac{\sum_{i \in I} T_{ij}}{C_j} = \frac{\sum_{i \in I} T_{ij}}{\omega Z_j}
+$$ 
+$$
+D_j = \frac{\sum_{i \in I} T_{ij}}{C_j} = \frac{\sum_{i \in I} T_{ij}}{\omega Z_j}
 $$
 
 Solving this set of equations yields the following:
 
 $$
-T_{ij} = \alpha H_i P_{ij}
+T_{ij} = \alpha H_i Pr_{ij}
 $$
 
 This is a singly-constrained gravity model where the probability that a household in zone $i$ will visit clinic $j$ is as follows:
 
 $$
-P_{ij} = \frac{e^{\beta_1 t_{ij} + \beta_{K+2} log \omega Z_j + \beta_{K + 3} R_j}}{\sum_j\prime e^{\beta_1 t_{ij}\prime + \beta_{K+2} log \omega Z_j\prime + \beta_{K + 3} R_j\prime}}
+Pr_{ij} = \frac{e^{\beta_1 t_{ij} + \beta_{K+2} log \omega Z_j + \beta_{K + 3} D_j}}{\sum_j\prime e^{\beta_1 t_{ij}\prime + \beta_{K+2} log \omega Z_j\prime + \beta_{K + 3} D_j\prime}}
 $$
 
-Ideally, the $\beta_1$, $\beta_{K+2}$, and $\beta_{K + 3}$ parameters would be estimated iteratively in order to meet the outlined constraints. However, due to a lack of observed data on trips to doctors, these parameters are instead chosen based on the following considerations:
+Ideally, the three $\beta$ parameters would be estimated iteratively in order to meet the outlined constraints. However, due to a lack of observed data on trips to doctors in the study area, these parameters are instead chosen based on the following considerations:
 
--   The $\beta_1$ travel time impedance parameter is set to -0.05 based on previous choice models in the region and to align with the 2SFCA and B2SFCA approaches above
--   Random utility theory requires $\beta_{K+2}$ to lie between 0 to 1 in value. It is set equal to 1 in this case to maximize the attractiveness of larger clinics.
--   No theory is currently available to guide the choice of the $\beta_{K+3}$ parameter and so -0.5 is chosen as a "first guess" at a parameter value that would produce a reasonable sensitivity to clinic over-crowding, but not prevent over-crowding from occurring
+-   The $\beta_1$ travel time impedance parameter is set to -0.05 based on previous choice models in the region [@kasraian2020] and to align with the 2SFCA and B2SFCA approaches above.
+-   Random utility theory requires the $\beta_{K+2}$ capacity attractiveness parameter to lie between 0 to 1 in value. It is set equal to 1 in this case to maximize the attractiveness of larger clinics with more physicians.
+-   No theory is currently available to guide the choice of the $\beta_{K+3}$ parameter that influences sensitivity to overcrowding when trip demand exceeds the capacity to see patients at a clinic. In this case, -0.5 is chosen as a "first guess" value that would produce a reasonable sensitivity to clinic over-crowding, but not prevent over-crowding from occurring.
 
-These values ensure that increased travel times and demand-to-capacity ratios reduce the probability that a household in zone $i$ will visit clinic $j$, and increased capacity at clinic $j$ increases the probability.
+These values ensure that increased travel times and demand-to-capacity ratios reduce the probability that a household in zone $i$ will visit clinic $j$, while increased capacity at clinic $j$ increases the probability.
 
-In order to ensure that $\bar{R}$ is approximately equal to 1, the $\alpha$ and $\omega$ parameters are assumed to be 0.065 visits to the doctor per household and 22 patients seen by a doctor per day, on average, respectively. Since $R_j$ is a function of $T_{ij}$ and vice-versa, an iterative approach is taken to estimate the $R_j$ values. The multinomial logit destination choice model ensures that demand at clinics is not over-estimated, as each patient on average is assigned to a single clinic and is not double counted, as occurs in the 2SFCA method. The end result is an approach that involves location choice modelling by maximizing utility for patients, with clinics with higher demand and longer travel times attracting fewer trips while larger clinics and those closer to the origins attract more trips.
+In order to ensure that the average observed demand-to-capacity ratio $\bar{D}$ is approximately equal to 1, the $\alpha$ and $\omega$ parameters are assumed to be 0.065 visits to the doctor per household and 22 patients seen by a doctor per day, on average, respectively. The patients per day number is derived from the Canadian Institute for Health Information who reports that the median number of patients seen by primary care physicians during a typical work week in Ontario was 100 in 2019 [@cihi2020]. At an assumed 20 patients per day over a 5-day work week and 50 weeks in a typical year after holidays, this results in an estimated patient capacity of approximately 3.2 million patients per year across the 631 primary care physicians in the data, or 5.9 visits per person per year. On the other hand, Vogel [-@vogel2017] reports a Canada-wide average of 7.6 visits per person per year in 2016, which would result in demand for more than 4 million visits per year from the population residing in the City of Hamilton. Taking into consideration that Hamilton is part of the larger Greater Golden Horseshoe region, meaning not all trips and visits are bounded by the study area, and the uncertainties surrounding the estimated visits per year and physician practices, we slightly increased the number of patients seen per physician per day to 110 for a capacity of 6.46 visits per person per year and a total of 13,882 trips generated per day. Dividing the total estimated number of daily trips by the number of households yields a household trip generation rate of approximately 0.065 trips per household per day.
+
+Since $D_j$ is a function of $T_{ij}$ and vice-versa, an iterative approach is taken to estimate the $D_j$ values. The multinomial logit destination choice model ensures that demand at clinics is not over-estimated, as each patient on average is assigned to a single clinic and is not double counted, as occurs in the 2SFCA method. The end result is an approach that involves location choice modelling by maximizing utility for patients, with clinics with higher demand and longer travel times attracting fewer trips while larger clinics that are uncongested and those closer to the origins attract more trips.
 
 ## Utility-based Accessibility
 
-As shown by Anas [-@anas1983], multinomial logit (MNL) models are equivalent to gravity models. Following Ben-Akiva and Lerman [-@ben1985], accessibility can be defined within random utility theory as the expected maximum utility for a trip. For the MNL model, it can be shown that this is the natural logarithm of the denominator of the logit model (the so-called "logsum" or "inclusive value" term), yielding for this model the following accessibility measure:
+While the probability of visiting a particular clinic is based on its utility relative to the utility of others available within the choice set, following Ben-Akiva and Lerman [-@ben1985], the expected maximum utility from all destination choices available to a household can be understood as a random utility theory-based measure of accessibility. For the multinomial logit (MNL) model, it can be shown that this is the logarithm of the denominator (the so-called "logsum" or "inclusive value" term), yielding for this model the following accessibility measure:
 
 $$
-a_i = log(\sum_{j\prime} e^{\beta_1 t_{ij}\prime + \beta_{K+2} log \omega Z_j\prime + \beta_{K + 3} R_j\prime})
+A_i = log(\sum_{j\prime} e^{\beta_1 t_{ij}\prime + \beta_{K+2} log \omega Z_j\prime + \beta_{K + 3} D_j\prime})
 $$
+
+where accessibility is based not only on the utility of the clinic with the greatest probability of visitation, but the utility of all clinics available to a household considering travel impedance, clinic size and capacity, trip-based household demand for primary care physicians, and congestion or crowding.
 
 # Study Area
 
-The study area for this research is the City of Hamilton in Ontario, Canada. Based on data from the 2016 Canadian Census of Population, the population of Hamilton is `r prettyNum(data_da_2016_poly %>% st_drop_geometry() %>% summarize(sum(Population)) %>% pull(), big.mark = ",")` living in `r prettyNum(data_da_2016_poly %>% st_drop_geometry() %>% summarize(sum(Households)) %>% pull(), big.mark = ",")` households. Based on the assumed $\omega = 0.065$ visits to the doctor per household, this results in `r prettyNum(data_da_2016_poly %>% st_drop_geometry() %>% summarize(sum(Households)*0.065) %>% pull(), big.mark = ",")` trips to the doctor entering the MNL model. The left panel of Figure \ref{fig:study_area_map} plots population densities in the Dissemination Areas, the smallest geographic unit in the census, in the City of Hamilton, highlighting that the higher-density urban core is surrounded by lower-density suburbs that extend into land that is largely rural in character.
+The study area for this research is the City of Hamilton in Ontario, Canada. Based on data from the 2016 Canadian Census of Population, the population of Hamilton is `r prettyNum(data_da_2016_poly %>% st_drop_geometry() %>% summarize(sum(Population)) %>% pull(), big.mark = ",")` living in `r prettyNum(data_da_2016_poly %>% st_drop_geometry() %>% summarize(sum(Households)) %>% pull(), big.mark = ",")` households. Based on the assumed $\omega = 0.065$ visits to the doctor per household, this results in `r prettyNum(data_da_2016_poly %>% st_drop_geometry() %>% summarize(sum(Households)*0.065) %>% pull(), big.mark = ",")` trips to the doctor entering the MNL model. The left panel of Figure \ref{fig:study_area_map} plots population densities in the Dissemination Areas (DAs) in the City of Hamilton, highlighting that the higher-density urban core is surrounded by lower-density suburbs that extend into land that is largely rural in character. DAs are the smallest geographic unit in the census for which socioeconomic and demographic data are publicly available.
 
 Information on the count and location of primary care physicians was obtained using the College of Physicians and Surgeons of Ontario's online registration database. Clinic locations were geocoded based on their address and records were aggregated to count the number of physicians practicing at each unique location. The data for this paper have been used previously by Páez et al. [-@paez2019], although in this case we consider only clinics that are within the spatial extent of the City of Hamilton. While this does introduce edge effects in the calculation of accessibility, limiting the study extent to a closed system permits calculation of the multinomial logit model's congestion effects and utility-based accessibilities. In total, there are `r prettyNum(doctors %>% st_drop_geometry() %>% summarize(sum(doctor_count)) %>% pull(), big.mark = ",")` primary care physicians available at clinics in the City of Hamilton in our data. Note that this is not strictly the number of physicians, as some physicians offer services at more than one clinic. Rather, it reflects the availability of physicians at given locations. The right panel of Figure \ref{fig:study_area_map} plots the location and total number of available physicians at the clinic locations. This total produces a city-wide average provider-to-population ratio of `r round((doctors %>% st_drop_geometry() %>% summarize(sum(doctor_count)) %>% pull())/(data_da_2016_poly %>% st_drop_geometry() %>% summarize(sum(Population)/100000) %>% pull()), 2)` primary care doctors available per 100,000 people. Based on our assumption of $\alpha = 22$ patients seen per doctor every day, this results in a total capacity of `r prettyNum(doctors %>% st_drop_geometry() %>% summarize(sum(doctor_count)*22) %>% pull(), big.mark = ",")` patient visits per day in the MNL model formulation.
 
-```{r prepare fig 1, include = FALSE}
+```{r prepare study_area_map, include = FALSE}
 pop_dens_map <- tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
   tm_fill("grey90") +
   tm_shape(data_da_2016_poly) + 
@@ -263,12 +273,14 @@ To compare the three methods, we focus first on the results associated with how 
 lowerfun <- function(data,mapping){
   ggplot(data = data, mapping = mapping) +
     geom_smooth(method='lm', formula= y~x, colour="black", size = .5) +
-    geom_point(alpha = 0.3, size = 0.2, color = "gray35")}
+    geom_point(alpha = 0.3, size = 0.2, color = "gray35") +
+  theme_minimal(base_size = 8)}
 
 # diagonal element custom function
 diagfun <- function(data, mapping) {
   ggplot(data = data, mapping=mapping) +
-    geom_density(fill = "gray")}
+    geom_density(fill = "gray") +
+  theme_minimal(base_size = 8)}
 
 # calculate capacity-to-demand ratio for MNL results
 doctors %<>% mutate(mnl_cdr = 1/mnl_dcr)
@@ -283,14 +295,14 @@ pair_plot_access <- ggpairs(data_da_2016_poly %>% st_drop_geometry() %>% drop_na
         columns = 12:14, xlab = "Accessibility", 
         diag = list(continuous = wrap(diagfun)),
         lower = list(continuous = wrap(lowerfun)),
-        columnLabels = c("2SFCA", "B2SFCA", "MNL"))
+        columnLabels = c("2SFCA", "B2SFCA", "MNL")) 
 
 # save
 ggsave(pair_plot_ppr, filename = "./img/pair_plot_ppr.jpg", device = "jpeg", dpi = 600, height = 4, width = 7)
 ggsave(pair_plot_access, filename = "./img/pair_plot_access.jpg", device = "jpeg", dpi = 600, height = 4, width = 7)
 ```
 
-```{r ppr_dist_fig, fig.cap="\\label{fig:ppr_dist}Comparing Accessibility Distributions", out.width = '100%'}
+```{r ppr_dist_fig, fig.cap="\\label{fig:ppr_dist}Comparing Level of Service Distributions", out.width = '100%'}
 knitr::include_graphics("./img/pair_plot_ppr.jpg")
 ```
 
@@ -346,7 +358,7 @@ los_maps <- tmap_arrange(los_map_fca, los_map_bfca, los_map_mnl, nrow = 1, outer
 tmap_save(los_maps, filename = "./img/los_maps.jpg", dpi = 600, width = 9, height = 4)
 ```
 
-```{r los_maps_fig, fig.cap="\\label{fig:los_maps}Comparing Accessibility Distributions", out.width = '100%'}
+```{r los_maps_fig, fig.cap="\\label{fig:los_maps}Calculated Clinic Levels of Service", out.width = '100%'}
 knitr::include_graphics("./img/los_maps.jpg")
 ```
 
@@ -493,13 +505,13 @@ access_diff_maps <- tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) +
 tmap_save(access_diff_maps, filename = "./img/access_diff_maps.jpg", dpi = 600, width = 9, height = 4)
 ```
 
-```{r plot access_diff_maps, fig.cap="\\label{fig:access_diff_maps}Accessibility Differences", out.width = '100%'}
+```{r plot access_diff_maps, fig.cap="\\label{fig:access_diff_maps}Normalized Accessibility Differences", out.width = '100%'}
 knitr::include_graphics("./img/access_diff_maps.jpg")
 ```
 
 To examine whether there are any spatial patterns in these differences, Figure \ref{fig:access_locm_maps} plots the results of Local Moran's I tests. The Local Moran's I is calculated on the differences using queen-style contiguity weights, a critical significance level of $p=0.05$, and without correcting for multiple testing. The resulting maps reveal some interesting patterns of spatial clustering in the calculated normalized differences, particularly across the two FCA models compared to the MNL model. Here, differences in accessibility are greatest between the FCA and MNL methods in the low-low (LL) cluster in the ring of outer suburbs that surround the city where the MNL model tends to estimate higher accessibilities. In contrast, the calculated accessibilities are more consistent across the methods in the high-high (HH) cluster in the central part of the city. Differences in the remaining zones are generally not significant (NS) aside from a very small number of high-low (HL) and low-high (LH) outliers.
 
-This overall pattern is likely due to the way the MNL approach handles clinic choices with populations tending to select their nearest clinics. On the one hand, the greater accessibilities in more suburban and rural zones likely derived from these populations accessing their closest facility. On the other hand, this also means that fewer individuals from more urban locations are competing for healthcare resources in these more suburban and rural areas, leading to higher levels of service at these suburban and rural clinics. In contrast, the FCA methods allocate populations to all clinics within their catchment area using weights derived from the impedance function. While this produces a smoothing of the accessibilities, it can result in lower levels of service and accessibility for clinics that populations may not actually use. This effect seems to be minimized in more urban locations featuring higher population densities and a greater number of clinics with available physicians. Comparing the normalized results from the 2SFCA and the B2SFCA models, the patterns of spatial clustering in the differences appears to be less associated with the city's urban-suburban-rural urban structure. While the B2SFCA method generally calculates slightly higher accessibilities across the western half of the city, the methods are most dissimilar in the south-east rural area.
+This overall pattern is likely due to the way the MNL approach handles clinic choices with populations tending to select their nearest clinics. On the one hand, the greater accessibilities in more suburban and rural zones is likely derived from these populations accessing their closest facility. On the other hand, this also means that fewer individuals from more urban locations are competing for healthcare resources in these more suburban and rural areas, leading to higher levels of service at these suburban and rural clinics. In contrast, the FCA methods allocate populations to all clinics within their catchment area using weights derived from the impedance function. While this produces a smoothing of the accessibilities, it can result in lower levels of service and accessibility for clinics that populations may not actually use. This effect seems to be minimized in more urban locations featuring higher population densities and a greater number of clinics with available physicians. Comparing the normalized results from the 2SFCA and the B2SFCA models, the patterns of spatial clustering in the differences appears to be less associated with the city's urban-suburban-rural urban structure. While the B2SFCA method generally calculates slightly higher accessibilities across the western half of the city, the methods are most dissimilar in the south-east rural area.
 
 ```{r local moran maps, include = FALSE}
 da_poly_lmc_long <- da_poly %>%
@@ -536,35 +548,111 @@ tmap_save(access_locm_maps, filename = "./img/access_locm_maps.jpg", dpi = 600, 
 knitr::include_graphics("./img/access_locm_maps.jpg")
 ```
 
-#Sensitivity Analysis
-In order to assess the impact of the $\beta_{K+2}$ and $\beta_{K + 3}$ parameters on the results generated by the MNL method, a sensitivity analysis was undertaken. The $\beta_{K+2}$ parameter was decreased from 1 to 0.5 and the $\beta_{K + 3}$ parameter was decreased from -0.5 to -1. Both adjustments to the parameters result in decreased accessibilities. A comparison of the accessibilities produced in all three scenarios, including with the original model parameters, is presented in Figure \ref{fig:sensitivity_maps}.
+# Sensitivity Analysis
 
-```{r sensitivity analysis access maps, include = FALSE}
-MNL_original <- tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
-  tm_fill("grey90") +
-  tm_shape(data_da_2016_poly) + 
-  tm_fill(col = "mnl_access", palette = "viridis", style = "jenks", title = "MNL Accessibility")  +
-  tm_layout(legend.position = c("left","bottom"))
+In order to assess the impact of the $\beta_{K+2}$ and $\beta_{K + 3}$ parameters on the results generated by the MNL method, a sensitivity analysis was undertaken. The $\beta_{K+2}$ parameter that influences the attractiveness of higher-capacity clinics was gradually increased from 0.1 to 1 and the $\beta_{K + 3}$ parameter that influences sensitivity to congestion or crowding at the clinics was gradually increased from -1 to -0.1. Increments of 0.1 are used for each variable. Results are summarized by calculating average CDRs and accessibilities across the clinics and DAs respectively in each of the 100 scenarios (Figure \ref{fig:sensitivity_plot}). Two example scenarios are also created for illustration. In Scenario 1, the $\beta_{K+2}$ parameter was decreased from 1 to 0.5 relative to the original calculations while the $\beta_{K + 3}$ parameter was decreased from -0.5 to -1 in Scenario 2 (increasing the sensitivity to overcrowding). 
 
-MNL_k2 <- tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
-  tm_fill("grey90") +
-  tm_shape(data_da_2016_poly) + 
-  tm_fill(col = "mnl_access_k2", palette = "viridis", style = "fixed",breaks = c(0,2.110,2.278,2.393,2.469,2.554), title = "Beta k2 Sensitivity Test")  +
-  tm_layout(legend.position = c("left","bottom"))
+For the CDRs in the left panel of Figure \ref{fig:sensitivity_plot}, the sensitivity analysis reveals that decreasing sensitivity to the attractiveness of capacity (as $\beta_{K+2}$ approaches 0.1) and decreasing sensitivity to overcrowding (as $\beta_{K+3}$ approaches -0.1) combine to produce more balance between the supply of physician capacities and patient demand, on average. Examining the clinic data in greater detail, this weighting results in more trips being made to smaller and more congested clinics relative to larger ones where there is more supply relative to demand. Greater weight placed on facility capacity (as $\beta_{K+2}$ approaches 1) and high sensitivity to overcrowding (as $\beta_{K+3}$ approaches -1) also results in more balanced CDRs, but in this case, more trips are made to larger clinics that become more congested versus smaller ones that are less congested. Scenarios along the diagonal exhibit relatively less balance, on average, across the clinics. 
 
-MNL_k3 <- tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
-  tm_fill("grey90") +
-  tm_shape(data_da_2016_poly) + 
-  tm_fill(col = "mnl_access_k3", palette = "viridis", style = "fixed",breaks = c(0,2.110,2.278,2.393,2.469,2.554), title = "Beta k3 Sensitivity Test")  +
-  tm_layout(legend.position = c("left","bottom"))
+In terms of accessibilities, average accessibilities are, in general, more sensitive to changes in the $\beta_{K+2}$ parameter than $\beta_{K+3}$. Comparing the original results against Scenario 1, average accessibilities increase by around 22% when $\beta_{K+2}$ increases from 0.5 to 1. In contrast, access increases by about 11% across Scenario 2 and the original calculations as the $\beta_{K+3}$ sensitivity to overcrowding parameter decreases in weight from -1 to -0.5. The greatest average accessibilities in \ref{fig:sensitivity_plot} result from high attractiveness to clinic capacity and low weight on overcrowding ($\beta_{K+2} = 1$ and $\beta_{K+3} = -0.1$), leading to more trips made to smaller overcrowded clinics that are more evenly distributed around the city and likely closer to the origins in terms of travel time relative to some of the larger clinics that are more centrally-located.
 
-sensitivity_maps <- tmap_arrange(MNL_original,MNL_k2, MNL_k3, nrow = 1, outer.margins = c(0, 0, 0, 0))
-tmap_save(sensitivity_maps, filename = "./img/sensitivity_maps.jpg", dpi = 600, width = 9, height = 4)
+To examine whether the sensitivity analysis impacts the spatial distributions of calculated accessibilities, Figure \ref{fig:sensitivity_maps} plots normalized accessibility results from the original and two sensitivity scenarios. Although both adjustments to the parameters result in decreased absolute accessibilities in Figure \ref{fig:sensitivity_plot}, comparisons of the normalized values suggest there are no distinct spatial trends associated with changes in $\beta_{K + 2}$ and $\beta_{K + 3}$ across the sensitivity scenarios.
+
+```{r sensitivity analysis plot, include = FALSE}
+frame_orig <- data.frame(p_betak2 = "1", p_betak3 = "-0.5")
+frame_s1 <- data.frame(p_betak2 = "0.5", p_betak3 = "-0.5")
+frame_s2 <- data.frame(p_betak2 = "1", p_betak3 = "-1")
+
+# make sensitivity plots
+access_sensitivity_plot <- ggplot(sensitivity_df_avg, aes(x = p_betak2, y = p_betak3)) + 
+  geom_raster(aes(fill = access)) + 
+  scale_fill_viridis(discrete=FALSE) + 
+  scale_y_discrete(limits=rev) +
+  labs(x = expression(paste(beta[K+2], " (capacity attractiveness)")),
+       y = expression(paste(beta[K+3], " (overcrowding sensitivity)")),
+       fill = "Mean \nAccess") +
+  geom_tile(data=frame_orig, fill = NA, aes(colour = "Original"), size = 1) +
+  geom_tile(data=frame_s1, fill = NA, aes(colour = "S1"), size = 1) +
+  geom_tile(data=frame_s2, fill = NA, aes(colour = "S2"), size = 1) + 
+  scale_color_manual(name = "Scenario", 
+                     values =c('Original'='grey40','S1'='orange', "S2" = "blue"), 
+                     labels = c('Original','S1', "S2")) + 
+  ggtitle("Accessibility") +
+  theme_minimal(base_size = 9)
+
+#sensitivity_plot
+
+cdr_sensitivity_plot <- ggplot(sensitivity_df_avg, aes(x = p_betak2, y = p_betak3)) + 
+  geom_raster(aes(fill = cdr)) + 
+  scale_fill_viridis(discrete=FALSE, option = "A") + 
+  scale_y_discrete(limits=rev) +
+  labs(x = expression(paste(beta[K+2], " (capacity attractiveness)")),
+       y = expression(paste(beta[K+3], " (overcrowding sensitivity)")),
+       fill = "Mean \nCDR") +
+  geom_tile(data=frame_orig, fill = NA, aes(colour = "Original"), size = 1) +
+  geom_tile(data=frame_s1, fill = NA, aes(colour = "S1"), size = 1) +
+  geom_tile(data=frame_s2, fill = NA, aes(colour = "S2"), size = 1) + 
+  scale_color_manual(name = "Scenario", 
+                     values =c('Original'='grey40','S1'='orange', "S2" = "blue"), 
+                     labels = c('Original','S1', "S2")) + 
+  ggtitle("Capacity-to-Demand Ratio (CDR)") +
+  theme_minimal(base_size = 9)
+
+#cdr_sensitivity_plot
+
+sensitivity_plot <- cdr_sensitivity_plot + access_sensitivity_plot + plot_layout(guides = "collect") & theme(legend.position = "bottom")
+#sensitivity_plot
+
+ggsave(sensitivity_plot, filename = "./img/sensitivity_plot.jpg", device = "jpeg", dpi = 600, height = 4, width = 7)
 ```
 
-```{r plot sensitivity_maps, fig.cap="\\label{fig:sensitivity_maps}Sensitivity Analysis Results", out.width = '100%'}
+```{r plot sensitivity_tiles, fig.cap="\\label{fig:sensitivity_plot}Sensitivity Analysis Results", out.width = '100%'}
+knitr::include_graphics("./img/sensitivity_plot.jpg")
+```
+
+```{r sensitivity_maps,  include = FALSE}
+da_poly_mnl_sensitivity_long <- data_da_2016_poly %>%
+  mutate(mnl_access = norm_x(mnl_access),
+         mnl_access_k2 = norm_x(mnl_access_k2),
+         mnl_access_k3 = norm_x(mnl_access_k3)) %>%
+  select(starts_with("mnl_"), geometry) %>%
+  pivot_longer(starts_with("mnl_"), names_to = "name", values_to = "values") %>% 
+  mutate(name = fct_relevel(name, "mnl_access", "mnl_access_k2", "mnl_access_k3")) %>%
+  st_sf()
+
+access_sensitivity_maps <- tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(da_poly_mnl_sensitivity_long) +
+  tm_fill(col = "values", 
+          alpha = .75, 
+          style = 'jenks', 
+          #breaks = div_breaks, 
+          palette = "viridis", 
+          title = "", #"Accessibility Difference Hot Spots",
+          legend.is.portrait=FALSE) +
+  tm_facets("name", nrow = 1) +
+  tm_layout(bg.color = "grey95", 
+            legend.outside = TRUE,
+            legend.outside.position = c("bottom"),
+            legend.outside.size = .1,
+            #legend.position = c(0.01, 1),
+            #legend.stack = "horizontal",
+            between.margin = 0.1,
+            panel.labels = c(expression(paste("Original: ", beta[K+2]==1, " & ", beta[K+3]==-0.5)),
+                             expression(paste("S1: ", beta[K+2]==0.5, " & ", beta[K+3]==-0.5)),
+                             expression(paste("S2: ", beta[K+2]==1, " & ", beta[K+3]==-1))),
+            panel.label.bg.color = NA,
+            panel.label.size = .75)
+
+#access_sensitivity_maps
+
+tmap_save(access_sensitivity_maps, filename = "./img/sensitivity_maps.jpg", dpi = 600, width = 9, height = 4)
+```
+
+```{r plot sensitivity_maps, fig.cap="\\label{fig:sensitivity_maps}Sensitivity Scenario Maps", out.width = '100%'}
 knitr::include_graphics("./img/sensitivity_maps.jpg")
 ```
+
 As shown in the above figure, the accessibilities have decreased across the City of Hamilton in both sensitivity analysis scenarios. However, reducing the $\beta_{K+2}$ parameter has a larger effect as compared to reducing the $\beta_{K + 3}$ parameter, with more dissemination areas being in the lowest category of accessibilities. The model is therefore more sensitive to the $\beta_{K+2}$ parameter, however, adjusting the $\beta_{K + 3}$ parameter also has a large effect on the results produced by the MNL method. It is therefore important to calibrate the model's parameters in order to match observed trip distributions in the City of Hamilton.
 
 # Discussion and Conclusions

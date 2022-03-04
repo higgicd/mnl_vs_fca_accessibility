@@ -9,6 +9,9 @@ library(sf)
 library(tidyverse)
 library(tmap)
 library(dplyr)
+library(forcats)
+library(viridis)
+library(patchwork)
 
 # options
 tmap_mode("plot")
@@ -335,7 +338,7 @@ ai <- ai %>%
   mutate(Accessibility = log10(sums$Sum))
 ```
 
-## Sensitivity Analysis halve betak2
+## Manual Sensitivity Analysis halve betak2
 
 ```{r}
 #Initialize new model parameters
@@ -447,7 +450,7 @@ ai_k2 <- ai_k2 %>%
   mutate(Accessibility = log10(sums_k2$Sum))
 ```
 
-## Sensitivity Analysis double betak3
+## Manual Sensitivity Analysis double betak3
 
 ```{r}
 #Initialize new model parameters
@@ -560,7 +563,206 @@ ai_k3 <- ai_k3 %>%
   mutate(Accessibility = log10(sums_k3$Sum))
 ```
 
-# Compare sensitivity test results
+## Full Sensitivity Analysis 
+
+```{r}
+sensitivity_df <- data.frame()
+cdr_sensitivity_df <- data.frame()
+
+for (bk2 in 1:10){
+  
+  for (bk3 in -1:-10){ #-1:-10
+    
+    #Initialize new model parameters
+    betak2 <- bk2/10
+    betak3 <- bk3/10
+    
+    # initialize Rj values as equal to average demand to capacity ratio for all DAs
+    Rj_k4 <- data.frame(doctor_id) %>%
+      mutate(Ratio = R_bar) 
+    
+    #set up data frame for trip distributions for each clinic and DA
+    Tij_k4 <- Hamiltontimes 
+    
+    # set up data frame for calculating exponent term for each clinic and DA
+    expo_k4 <- Hamiltontimes 
+    
+    # set up data frame to store sums of exponent term
+    sums_k4 <- data.frame(GeoUID) 
+    
+    #calculate exponent term for all DAs and clinics
+    expo_k4 <- calexpo(expo_k4,Rj_k4) 
+    
+    # sum each row in exponent matrix
+    sums_k4$Sum <- apply(expo_k4[,2:181],1,sum) 
+    
+    # calculate initial trip distribution for all clinics and DAs
+    Tij_k4 <- calTij(expo_k4,sums_k4,Tij_k4) 
+    
+    rj_k4 <- data.frame(doctor_id)
+    
+    Rj_k4_new <- data.frame(doctor_id)
+    
+    convergence <- data.frame(doctor_id)
+    
+    converged <- data.frame(doctor_id)
+    
+    epsilon <- 0.01
+    
+    max_iteration <- 10
+    
+    iteration <- 1
+    
+    sums_k4 <- data.frame(GeoUID)
+    
+    # Update Rj values with trip distribution
+    rj_k4 <- rj_k4 %>%
+      mutate(Ratio = apply(Tij_k4[,2:181],2,sum)/(omega*doctors$doctor_count))
+    
+    Rj_k4_new <- Rj_k4_new %>%
+      mutate(Ratio = (Rj_k4$Ratio + rj_k4$Ratio)/2)
+    
+    convergence <- convergence %>%
+      mutate(Value = abs((Rj_k4_new$Ratio - Rj_k4$Ratio))/Rj_k4$Ratio)
+    
+    # check if convergence value is less than or equal to epsilon
+    converged <- converged %>%
+      mutate(Value = !(convergence$Value > epsilon)) 
+    
+    # assign updated ratios to previous ratios
+    Rj_k4 <- Rj_k4_new 
+    
+    # Iteratively calculate Rj values until they converge
+    while(!all(converged$Value)) #run loop until all clinics have converged to within epsilon
+    {
+      iteration = iteration + 1
+      
+      if(iteration == max_iteration) #stop loop if reached max number of iterations
+      {
+        break
+      }
+      
+      else
+      {
+        expo_k4 <- calexpo(expo_k4, Rj_k4) #calculate exponent terms
+        
+        sums_k4$Sum <- apply(expo_k4[,2:181],1,sum) #calculate sums of exponent terms
+        
+        Tij_k4 <- calTij(expo_k4,sums_k4,Tij_k4) #calculate trip distribution for this iteration
+        
+        #update ratios with new trip distribution
+        rj_k4 <- rj_k4 %>%
+          mutate(Ratio = apply(Tij_k4[,2:181],2,sum)/(omega*doctors$doctor_count))
+        
+        Rj_k4_new <- Rj_k4_new %>%
+          mutate(Ratio = (Rj_k4$Ratio + rj_k4$Ratio)/2)
+        
+        convergence <- convergence %>%
+          mutate(Value = abs((Rj_k4_new$Ratio - Rj_k4$Ratio))/Rj_k4$Ratio)
+      
+        converged <- converged %>%
+          mutate(Value = !(convergence$Value > epsilon)) #check if ratios have converged
+        
+        Rj_k4 <- Rj_k4_new #assign updated ratios to previous ratios
+      }
+    }
+    
+    # calculate final exponent terms
+    expo_k4 <- calexpo(expo_k4, Rj_k4) 
+    
+    # calculate final sums of exponent terms
+    sums_k4$Sum <- apply(expo_k4[,2:181],1,sum) 
+    
+    # update trip distribution after final iteration
+    Tij_k4 <- calTij(expo_k4,sums_k4,Tij_k4) 
+    
+    ai_k4 <- data.frame(GeoUID)
+    
+    #Calculate new accessibilities for each DA
+    ai_k4 <- ai_k4 %>%
+      mutate(access = log10(sums_k4$Sum),
+             p_betak2 = betak2,
+             p_betak3 = betak3,
+             iteration_n = iteration)
+    
+    sensitivity_df <- rbind(sensitivity_df, ai_k4)
+    cdr_sensitivity <- Rj_k4 %>%
+      mutate(dcr = Ratio,
+             cdr = 1/Ratio,
+             p_betak2 = betak2,
+             p_betak3 = betak3)
+    
+    cdr_sensitivity_df <- rbind(cdr_sensitivity_df, cdr_sensitivity)
+  }
+}
+```
+
+# Compare accessibility sensitivity test results
+
+```{r}
+# summarize accessibility sensitivities
+sensitivity_df_avg <- sensitivity_df %>%
+  mutate(p_betak2 = as.factor(p_betak2),
+         p_betak3 = as.factor(p_betak3)) %>%
+  group_by(p_betak2, p_betak3) %>%
+  summarize(access = mean(access), .groups = "drop")
+
+# summarize CDR sensitivities
+cdr_sensitivity_df_avg <- cdr_sensitivity_df %>%
+  mutate(p_betak2 = as.factor(p_betak2),
+         p_betak3 = as.factor(p_betak3)) %>%
+  group_by(p_betak2, p_betak3) %>%
+  summarize(cdr = mean(cdr),
+            dcr = mean(dcr), .groups = "drop")
+
+# join cdr's to accessibilities
+sensitivity_df_avg %<>% left_join(cdr_sensitivity_df_avg, by = c("p_betak2", "p_betak3"))
+
+frame_orig <- data.frame(p_betak2 = "1", p_betak3 = "-0.5")
+frame_s1 <- data.frame(p_betak2 = "0.5", p_betak3 = "-0.5")
+frame_s2 <- data.frame(p_betak2 = "1", p_betak3 = "-1")
+
+# make sensitivity plots
+sensitivity_plot <- ggplot(sensitivity_df_avg, aes(x = p_betak2, y = p_betak3)) + 
+  geom_raster(aes(fill = access)) + 
+  scale_fill_viridis(discrete=FALSE) + 
+  scale_y_discrete(limits=rev) +
+  labs(x = expression(paste(beta[K+2], " (capacity attractiveness)")),
+       y = expression(paste(beta[K+3], " (overcrowding sensitivity)")),
+       fill = "Mean \nAccessibility") +
+  geom_tile(data=frame_orig, fill = NA, aes(colour = "Original"), size = 1) +
+  geom_tile(data=frame_s1, fill = NA, aes(colour = "S1"), size = 1) +
+  geom_tile(data=frame_s2, fill = NA, aes(colour = "S2"), size = 1) + 
+  scale_color_manual(name = "Scenario", 
+                     values =c('Original'='grey40','S1'='orange', "S2" = "blue"), 
+                     labels = c('Original','S1', "S2")) + 
+  ggtitle("Accessibility")
+
+#sensitivity_plot
+
+cdr_sensitivity_plot <- ggplot(sensitivity_df_avg, aes(x = p_betak2, y = p_betak3)) + 
+  geom_raster(aes(fill = cdr)) + 
+  scale_fill_viridis(discrete=FALSE, option = "A") + 
+  scale_y_discrete(limits=rev) +
+  labs(x = expression(paste(beta[K+2], " (capacity attractiveness)")),
+       y = expression(paste(beta[K+3], " (overcrowding sensitivity)")),
+       fill = "Mean \nCDR") +
+  geom_tile(data=frame_orig, fill = NA, aes(colour = "Original"), size = 1) +
+  geom_tile(data=frame_s1, fill = NA, aes(colour = "S1"), size = 1) +
+  geom_tile(data=frame_s2, fill = NA, aes(colour = "S2"), size = 1) + 
+  scale_color_manual(name = "Scenario", 
+                     values =c('Original'='grey40','S1'='orange', "S2" = "blue"), 
+                     labels = c('Original','S1', "S2")) + 
+  ggtitle("Capacity-to-Demand Ratio (CDR)")
+
+#cdr_sensitivity_plot
+
+sensitivity_combined <- cdr_sensitivity_plot + sensitivity_plot + plot_layout(guides = "collect") & theme(legend.position = "bottom")
+sensitivity_combined
+```
+
+# Join main results back to DA polygons and Doctors
+
 ```{r}
 #results for beta k2
 data_da_2016_poly %<>% 
@@ -617,25 +819,79 @@ tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) +
   tm_fill(col = "mnl_access", palette = "viridis", style = "jenks", title = "MNL Accessibility")  +
   tm_layout(legend.position = c("left","bottom"))
 
-tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
-  tm_fill("grey90") +
-  tm_shape(data_da_2016_poly) + 
-  tm_fill(col = "mnl_access_k2", palette = "viridis", style = "fixed",breaks = c(0,2.110,2.278,2.393,2.469,2.554), title = "Beta k2 Sensitivity Test")  +
-  tm_layout(legend.position = c("left","bottom"))
-
-tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
-  tm_fill("grey90") +
-  tm_shape(data_da_2016_poly) + 
-  tm_fill(col = "mnl_access_k3", palette = "viridis", style = "fixed",breaks = c(0,2.110,2.278,2.393,2.469,2.554), title = "Beta k3 Sensitivity Test")  +
-  tm_layout(legend.position = c("left","bottom"))
-
 plot(data_da_2016_poly$fca_access, data_da_2016_poly$mnl_access)
 plot(data_da_2016_poly$bfca_access, data_da_2016_poly$mnl_access)
 ```
 
+Sensitivity analysis maps
+
+```{r, eval = FALSE}
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "mnl_access_k2", palette = "viridis", 
+          style = "jenks",
+          #style = "fixed",breaks = c(0,7.563,7.964,8.219,8.405,8.609), 
+          #title = "Beta k3 Sensitivity Test",
+          title = expression(paste(beta[K+2], " = 0.5")))  +
+  tm_layout(legend.position = c("left","bottom"))
+
+tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "mnl_access_k3", palette = "viridis", 
+          style = "jenks",
+          #style = "fixed",breaks = c(0,7.563,7.964,8.219,8.405,8.609), 
+          #title = "Beta k3 Sensitivity Test",
+          title = expression(paste(beta[K+3], " = (-1)")))  +
+  tm_layout(legend.position = c("left","bottom"))
+```
+
+```{r}
+MNL_original <- tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "mnl_access", palette = "viridis", style = "jenks", title = "MNL \nAccessibility")  +
+  tm_layout(title = expression(paste("Original: ", beta[K+2]==1, " & ", beta[K+3]==-0.5)), 
+            title.size = .9,
+            legend.position = c("left","bottom"), frame = "grey40", frame.lwd = 3)
+
+MNL_k2 <- tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "mnl_access_k2", palette = "viridis", 
+          style = "jenks",
+          #style = "fixed",breaks = c(0,7.563,7.964,8.219,8.405,8.609), 
+          #title = "Beta k3 Sensitivity Test",
+          title = "MNL \nAccessibility")  +
+  tm_layout(title = expression(paste("S1: ", beta[K+2]==0.5, " & ", beta[K+3]==-0.5)), 
+            title.size = .9,
+            legend.position = c("left","bottom"), frame = "orange", frame.lwd = 3)
+
+MNL_k3 <- tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) + 
+  tm_fill("grey90") +
+  tm_shape(data_da_2016_poly) + 
+  tm_fill(col = "mnl_access_k3", palette = "viridis", 
+          style = "jenks",
+          #style = "fixed",breaks = c(0,7.563,7.964,8.219,8.405,8.609), 
+          #title = "Beta k3 Sensitivity Test",
+          title = "MNL \nAccessibility")  + #expression(paste("S2: ", beta[K+3], " = (-1)"))
+  tm_layout(title = expression(paste("S2: ", beta[K+2]==1, " & ", beta[K+3]==-1)), 
+            title.size = .9,
+            legend.position = c("left","bottom"), frame = "blue", frame.lwd = 3)
+
+#sensitivity_maps <- tmap_arrange(MNL_original, MNL_k2, MNL_k3, nrow = 1, outer.margins = c(0, 0, 0, 0.001))
+#tmap_save(sensitivity_maps, filename = "./img/sensitivity_maps.jpg", dpi = 600, width = 9, height = 4)
+```
+
+
 # Save
 
 ```{r}
-save(data_da_2016_poly, doctors, ontario_poly, ttm, 
+save(data_da_2016_poly, doctors, ontario_poly, ttm, sensitivity_df_avg,
      file = "./results/output_workbook_01.RData", compress = TRUE)
 ```
+
+
+
+
