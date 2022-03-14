@@ -102,7 +102,7 @@ tm_shape(ontario_poly, bbox = st_bbox(data_da_2016_poly)) +
 
 First, get data from OpenStreetMap for the Greater Golden Horseshoe region:
 
-```{r osm extract, include - FALSE}
+```{r osm extract, include = FALSE}
 # get url
 #oe_match("Golden Horseshoe")
 
